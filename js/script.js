@@ -227,16 +227,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const productId = params.get('id');
 
         const notFound = document.getElementById('product-not-found');
-        
         const product = dataToUse.find(p => p.id === productId);
         
         if (!product || product.hidden === true) {
-            if (notFound) {
+            // ONLY show "Not Found" if we actually have custom data (meaning dynamic fetch finished)
+            if (customData && notFound) {
                 notFound.querySelector('h2').textContent = product?.hidden ? 'Товар тимчасово недоступний' : 'Товар не знайдено';
                 notFound.querySelector('p').textContent = product?.hidden ? 'Вибачте, цей товар зараз прихований або знятий з продажу.' : 'Схоже, такої сторінки не існує або її було видалено.';
                 notFound.style.display = 'block';
+                container.style.display = 'none';
             }
-            container.style.display = 'none';
+            // If it's the first static call, just keep it hidden/waiting
             return;
         }
 
