@@ -67,18 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 2.5 Dynamic Catalog ---
-    const initDynamicCatalog = () => {
+    const initDynamicCatalog = (customData) => {
         const catalogGrid = document.getElementById('dyn-catalog-grid');
         const catalogTabs = document.getElementById('dyn-catalog-tabs');
         const subTabsContainer = document.getElementById('dyn-subcatalog-tabs');
         
-        if (!catalogGrid || typeof productsData === 'undefined') return;
+        const dataToUse = customData || (typeof productsData !== 'undefined' ? productsData : []);
+        if (!catalogGrid || !dataToUse.length) return;
 
         // Categories logic
         let categories = new Set();
         let subcatsByCat = {};
         
-        productsData.forEach(p => {
+        dataToUse.forEach(p => {
             if (p.category) {
                 categories.add(p.category);
                 if (!subcatsByCat[p.category]) subcatsByCat[p.category] = new Set();
@@ -90,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterCat === 'Категорії') {
                 let html = '';
                 categories.forEach(cat => {
-                    const firstProd = productsData.find(p => p.category === cat && !p.hidden);
+                    const firstProd = dataToUse.find(p => p.category === cat && !p.hidden);
                     let mainImg = '';
                     if (firstProd) {
                         if (firstProd.colors && firstProd.colors.length > 0) mainImg = firstProd.colors[0].image;
@@ -124,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            let filtered = productsData.filter(p => p.hidden !== true);
+            let filtered = dataToUse.filter(p => p.hidden !== true);
             if (filterCat !== 'Категорії') {
                 filtered = filtered.filter(p => p.category === filterCat);
                 if (filterSubCat && filterSubCat !== 'Всі') {
@@ -217,14 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- 2.6 Dynamic Product Page ---
-    const initDynamicProductPage = () => {
+    const initDynamicProductPage = (customData) => {
         const container = document.getElementById('product-container');
-        if (!container || typeof productsData === 'undefined') return;
+        const dataToUse = customData || (typeof productsData !== 'undefined' ? productsData : []);
+        if (!container || !dataToUse.length) return;
 
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
 
-        const product = productsData.find(p => p.id === productId);
+        const product = dataToUse.find(p => p.id === productId);
 
         if (!product || product.hidden === true) {
             const notFound = document.getElementById('product-not-found');
@@ -778,4 +780,23 @@ document.addEventListener('DOMContentLoaded', () => {
     initProductPages();
     initShoppingCart();
     initCheckout();
+
+    // --- 7. Load Dynamic Data ---
+    (async () => {
+        try {
+            const resp = await fetch('/api/products');
+            const res = await resp.json();
+            if (res.success && res.products && res.products.length > 0) {
+                console.log('✅ Loaded fresh data from Supabase');
+                // Re-initialize with new data
+                initDynamicCatalog(res.products);
+                initDynamicProductPage(res.products);
+                
+                // Also update cart UI since prices/titles might have changed
+                if (window.updateCartUI) window.updateCartUI();
+            }
+        } catch (e) {
+            console.error('❌ Failed to fetch dynamic data:', e);
+        }
+    })();
 });
