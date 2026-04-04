@@ -3,16 +3,14 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
-const supabase = require('./supabaseClient');
+const supabase = require('../supabaseClient');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const PRODUCTS_FILE = path.join(__dirname, 'js', 'products.js');
+const PRODUCTS_FILE = path.join(__dirname, '..', 'js', 'products.js');
 
 // ==============================
 // Multer — memory storage (Vercel-compatible)
-// On Vercel filesystem is read-only, so we use memoryStorage
-// and upload directly to Supabase Storage
 // ==============================
 const upload = multer({
     storage: multer.memoryStorage(),
@@ -31,8 +29,6 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ==============================
 // Dynamic Route: /js/products.js
-// Intercepts the script tag load → serves fresh data from Supabase
-// Falls back to the static local file if Supabase is not configured
 // ==============================
 app.get('/js/products.js', async (req, res, next) => {
     if (!supabase) return next();
@@ -56,7 +52,6 @@ app.get('/js/products.js', async (req, res, next) => {
 
 // ==============================
 // Dynamic Route: /sitemap.xml
-// Generates sitemap with real product URLs from Supabase
 // ==============================
 app.get('/sitemap.xml', async (req, res) => {
     const BASE = 'https://project-1ra3d.vercel.app';
@@ -100,8 +95,8 @@ app.get('/sitemap.xml', async (req, res) => {
     res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlEntries}\n</urlset>`);
 });
 
-// Serve static files (index.html, css, js, img etc.)
-app.use(express.static(__dirname));
+// Serve static files
+app.use(express.static(path.join(__dirname, '..')));
 
 // ==============================
 // Auth & Rate-limiting middleware
@@ -114,7 +109,7 @@ const requireAdmin = (req, res, next) => {
     next();
 };
 
-const rateLimitWindowMs = 15 * 60 * 1000; // 15 minutes
+const rateLimitWindowMs = 15 * 60 * 1000;
 const maxRequestsPerWindow = 5;
 const ipRequestCounts = new Map();
 
@@ -140,18 +135,10 @@ const checkoutRateLimiter = (req, res, next) => {
     next();
 };
 
-setInterval(() => {
-    const now = Date.now();
-    for (const [ip, record] of ipRequestCounts.entries()) {
-        if (now - record.windowStart > rateLimitWindowMs) ipRequestCounts.delete(ip);
-    }
-}, rateLimitWindowMs);
-
 // ==============================
 // API: Get all products
 // ==============================
 app.get('/api/products', async (req, res) => {
-    // 1. Try Supabase first
     if (supabase) {
         try {
             const { data, error } = await supabase.from('products').select('data');
@@ -162,7 +149,6 @@ app.get('/api/products', async (req, res) => {
         }
     }
 
-    // 2. Fallback: local file
     try {
         const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
         const match = content.match(/const productsData\s*=\s*(\[[\s\S]*\]);/);
@@ -183,9 +169,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Expected array of products' });
         }
 
-        // Save to Supabase
         if (supabase) {
-            // Determine which rows were removed
             const { data: currentIdsData } = await supabase.from('products').select('id');
             const currentIds = currentIdsData ? currentIdsData.map(r => r.id) : [];
             const newIds = products.map(p => String(p.id));
@@ -202,11 +186,10 @@ app.post('/api/products', requireAdmin, async (req, res) => {
             }
         }
 
-        // Local backup (will silently fail on Vercel — that's OK)
         try {
             const content = `const productsData = ${JSON.stringify(products, null, 2)};`;
             fs.writeFileSync(PRODUCTS_FILE, content, 'utf8');
-        } catch (_) { /* read-only fs on Vercel */ }
+        } catch (_) {}
 
         res.json({ success: true, count: products.length });
     } catch (e) {
@@ -216,7 +199,7 @@ app.post('/api/products', requireAdmin, async (req, res) => {
 });
 
 // ==============================
-// API: Checkout (Telegram notification)
+// API: Checkout
 // ==============================
 const TG_TOKEN = process.env.TG_TOKEN;
 const TG_CHAT_ID = process.env.TG_CHAT_ID;
@@ -246,36 +229,20 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
         if (tgRes.ok) {
             res.json({ success: true });
         } else {
-            console.error('TG Error:', tgRes);
             res.status(500).json({ success: false, error: 'Telegram API error' });
         }
     } catch (e) {
-        console.error(e);
         res.status(500).json({ success: false, error: e.message });
     }
 });
 
 // ==============================
-// API: Proxy (for importing YML/XML feeds)
+// API: Proxy
 // ==============================
 app.get('/api/proxy', requireAdmin, async (req, res) => {
     try {
         const { url } = req.query;
         if (!url) return res.status(400).json({ success: false, error: 'URL is required' });
-
-        let parsedUrl;
-        try { parsedUrl = new URL(url); }
-        catch { return res.status(400).json({ success: false, error: 'Невірний формат URL' }); }
-
-        if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
-            return res.status(400).json({ success: false, error: 'Дозволено лише HTTP/HTTPS' });
-        }
-
-        const hostname = parsedUrl.hostname;
-        const isPrivate = /^(localhost|127\.\d+\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+|192\.168\.\d+\.\d+|::1)$/i.test(hostname);
-        if (isPrivate) {
-            return res.status(403).json({ success: false, error: 'Доступ до локальних мереж заборонено' });
-        }
 
         const resp = await fetch(url);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -288,12 +255,11 @@ app.get('/api/proxy', requireAdmin, async (req, res) => {
 });
 
 // ==============================
-// API: Upload image → Supabase Storage
+// API: Upload image
 // ==============================
 app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) => {
     if (!req.file) return res.status(400).json({ success: false, error: 'Файл не отримано' });
 
-    // If Supabase is configured → upload to Storage bucket "product-images"
     if (supabase) {
         try {
             const ext = path.extname(req.file.originalname) || '.jpg';
@@ -314,14 +280,12 @@ app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) =
 
             return res.json({ success: true, url: publicUrl });
         } catch (e) {
-            console.error('Supabase Storage upload failed:', e.message);
             return res.status(500).json({ success: false, error: 'Помилка завантаження зображення: ' + e.message });
         }
     }
 
-    // Fallback: save to local disk (development only)
     try {
-        const UPLOAD_DIR = path.join(__dirname, 'img', 'products');
+        const UPLOAD_DIR = path.join(__dirname, '..', 'img', 'products');
         if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
         const ext = path.extname(req.file.originalname);
@@ -333,14 +297,8 @@ app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) =
     }
 });
 
-// ==============================
-// Start server
-// ==============================
 app.listen(PORT, () => {
-    console.log('\n✅ Сервер VenKnikens запущено!');
-    console.log(`\n🌐 Відкрийте браузер: http://localhost:${PORT}`);
-    console.log(`🔧 Адмін-панель:     http://localhost:${PORT}/admin.html`);
-    console.log('\nНатисніть Ctrl+C щоб зупинити сервер.\n');
+    console.log(`✅ Сервер запущено на порту ${PORT}`);
 });
 
-module.exports = app; // required for Vercel serverless export
+module.exports = app;
