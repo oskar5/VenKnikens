@@ -143,17 +143,17 @@ app.get('/api/products', async (req, res) => {
         try {
             const { data, error } = await supabase.from('products').select('data');
             if (error) throw error;
-            return res.json({ success: true, products: data.map(r => r.data) });
+            return res.json({ success: true, products: data.map(r => r.data), source: 'supabase' });
         } catch (e) {
             console.error('Supabase read failed, falling back to local file:', e.message);
         }
     }
-
+    
     try {
         const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
         const match = content.match(/const productsData\s*=\s*(\[[\s\S]*\]);/);
         const products = match ? JSON.parse(match[1]) : [];
-        res.json({ success: true, products });
+        res.json({ success: true, products, source: 'local' });
     } catch (e) {
         res.status(500).json({ success: false, error: e.message });
     }

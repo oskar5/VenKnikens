@@ -494,12 +494,18 @@
                     const data = await res.json();
                     if (data.success) {
                         window.tempProducts = data.products;
-                        document.getElementById('server-status-text').textContent = '✅ Підключено до серверу. Зміни зберігаються автоматично.';
-                        document.getElementById('server-status-card').style.background = '#f0fdf4';
+                        const statusText = data.source === 'supabase' 
+                            ? '✅ База Supabase підключена. Зміни зберігаються назавжди.' 
+                            : '⚠️ УВАГА: Працює локальний режим (Supabase не знайдено). Перевірте змінні в Vercel!';
+                        
+                        document.getElementById('server-status-text').textContent = statusText;
+                        document.getElementById('server-status-card').style.background = data.source === 'supabase' ? '#f0fdf4' : '#fff7ed';
+                        document.getElementById('server-status-card').style.borderColor = data.source === 'supabase' ? '#86efac' : '#fdba74';
+                        
                         renderTable(false);
                     }
                 } catch (e) {
-                    document.getElementById('server-status-text').textContent = '❌ Сервер не знайдено! Запустіть: node server.js';
+                    document.getElementById('server-status-text').textContent = '❌ Сервер не знайдено! Перевірте деплой на Vercel.';
                     document.getElementById('server-status-card').style.background = '#fef2f2';
                     document.getElementById('server-status-card').style.borderColor = '#fca5a5';
                 }
