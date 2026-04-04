@@ -59,7 +59,7 @@ app.get('/js/products.js', async (req, res, next) => {
 // Generates sitemap with real product URLs from Supabase
 // ==============================
 app.get('/sitemap.xml', async (req, res) => {
-    const BASE = 'https://venknikens.vercel.app';
+    const BASE = 'https://project-1ra3d.vercel.app';
     const today = new Date().toISOString().slice(0, 10);
 
     const staticUrls = [
