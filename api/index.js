@@ -169,20 +169,30 @@ app.post('/api/products', requireAdmin, async (req, res) => {
             return res.status(400).json({ success: false, error: 'Expected array of products' });
         }
 
+        // Save to Supabase
         if (supabase) {
-            const { data: currentIdsData } = await supabase.from('products').select('id');
-            const currentIds = currentIdsData ? currentIdsData.map(r => r.id) : [];
-            const newIds = products.map(p => String(p.id));
-            const idsToDelete = currentIds.filter(id => !newIds.includes(id));
+            // Determine which rows were removed
+            try {
+                const { data: currentIdsData, error: fetchError } = await supabase.from('products').select('id');
+                if (fetchError) throw fetchError;
 
-            if (idsToDelete.length > 0) {
-                await supabase.from('products').delete().in('id', idsToDelete);
-            }
+                const currentIds = currentIdsData ? currentIdsData.map(r => r.id) : [];
+                const newIds = products.map(p => String(p.id));
+                const idsToDelete = currentIds.filter(id => !newIds.includes(id));
 
-            if (products.length > 0) {
-                const rows = products.map(p => ({ id: String(p.id), data: p }));
-                const { error } = await supabase.from('products').upsert(rows);
-                if (error) throw error;
+                if (idsToDelete.length > 0) {
+                    const { error: delError } = await supabase.from('products').delete().in('id', idsToDelete);
+                    if (delError) throw delError;
+                }
+
+                if (products.length > 0) {
+                    const rows = products.map(p => ({ id: String(p.id), data: p }));
+                    const { error: upsertError } = await supabase.from('products').upsert(rows);
+                    if (upsertError) throw upsertError;
+                }
+            } catch (sbErr) {
+                console.error('❌ Supabase Error:', sbErr.message);
+                return res.status(500).json({ success: false, error: 'Supabase: ' + sbErr.message });
             }
         }
 

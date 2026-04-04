@@ -454,6 +454,13 @@
             };
 
             const autoSaveFile = async () => {
+                const saveBtn = document.querySelector('button[type="submit"]');
+                const originalBtnText = saveBtn ? saveBtn.innerHTML : 'ЗБЕРЕГТИ';
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<span class="iconify" data-icon="svg-spinners:180-ring-with-bg" style="vertical-align:middle;"></span> ЗБЕРІГАЮ...';
+                }
+
                 try {
                     const res = await fetch('/api/products', {
                         method: 'POST',
@@ -463,14 +470,21 @@
                         },
                         body: JSON.stringify(window.tempProducts)
                     }).then(handle401);
+                    
                     const data = await res.json();
                     if (data.success) {
-                        showToast('✅ Збережено у products.js!');
+                        showToast('✅ Зміни збережено в базі Supabase!');
                     } else {
-                        showToast('❌ Помилка збереження: ' + data.error, 'error');
+                        showToast('❌ Помилка: ' + (data.error || 'Невідома помилка'), 'error');
+                        console.error('Save failed:', data);
                     }
                 } catch (e) {
-                    showToast('❌ Не вдалось зʼєднатись з сервером. Чи запущений node server.js?', 'error');
+                    showToast('❌ Помилка з\'єднання: ' + e.message, 'error');
+                } finally {
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.innerHTML = originalBtnText;
+                    }
                 }
             };
 
