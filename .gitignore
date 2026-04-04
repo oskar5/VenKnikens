@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment variables — NEVER commit to git!
+.env
+
+# Temp / helper scripts
+merge.js
+migrate-to-supabase.js
+temp_offer.xml
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

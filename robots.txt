@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Block admin panel from indexing
+Disallow: /admin.html
+Disallow: /api/
+
+Sitemap: https://venknikens.vercel.app/sitemap.xml

@@ -1,0 +1,22 @@
+/* ---------------------------------------------------------
+   1. DESIGN SYSTEM (:root)
+   --------------------------------------------------------- */
+:root {
+    /* Colors */
+    --header-bg: #29364a;
+    --accent-blue: #3d4f6b;
+    --accent-blue-hover: #29364a;
+    --price-red: #ff4747;
+    --bg-dark: #0f172a;
+    --text-white: #ffffff;
+    --text-muted: rgba(255, 255, 255, 0.7);
+
+    /* Typography */
+    --font-main: 'Roboto', sans-serif;
+    --font-logo: 'Poppins', sans-serif;
+    --font-size-base: 16px;
+    --max-width: 1400px;
+    --header-height: 80px;
+    --transition-speed: 0.3s;
+    --border-radius: 30px;
+}
