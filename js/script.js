@@ -226,18 +226,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
 
-        const product = dataToUse.find(p => p.id === productId);
-
+        const notFound = document.getElementById('product-not-found');
+        
         if (!product || product.hidden === true) {
-            const notFound = document.getElementById('product-not-found');
             if (notFound) {
                 notFound.querySelector('h2').textContent = product?.hidden ? 'Товар тимчасово недоступний' : 'Товар не знайдено';
                 notFound.querySelector('p').textContent = product?.hidden ? 'Вибачте, цей товар зараз прихований або знятий з продажу.' : 'Схоже, такої сторінки не існує або її було видалено.';
                 notFound.style.display = 'block';
             }
+            container.style.display = 'none';
             return;
         }
 
+        if (notFound) notFound.style.display = 'none';
         container.style.display = 'block';
         document.title = `${product.title} | VenKnikens`;
 
