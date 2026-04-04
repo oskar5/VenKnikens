@@ -1,5 +1,5 @@
 /**
- * IMK Site Interactivity Controller
+ * IMK Site Interactivity Controller v1.2
  */
 document.addEventListener('DOMContentLoaded', () => {
     // --- 0. Mobile Menu Toggle ---
