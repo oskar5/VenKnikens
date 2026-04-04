@@ -228,6 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const notFound = document.getElementById('product-not-found');
         
+        const product = dataToUse.find(p => p.id === productId);
+        
         if (!product || product.hidden === true) {
             if (notFound) {
                 notFound.querySelector('h2').textContent = product?.hidden ? 'Товар тимчасово недоступний' : 'Товар не знайдено';
