@@ -270,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dyn-sku').textContent = 'Артикул: ' + (product.sku || '');
         document.getElementById('dyn-price').textContent = product.price + ' грн.';
         document.getElementById('dyn-old-price').textContent = product.oldPrice ? (product.oldPrice + ' грн.') : '';
-        document.getElementById('dyn-desc').innerHTML = product.description.replace(/\\n/g, '<br>') || '';
+        document.getElementById('dyn-desc').innerText = product.description.replace(/\\n/g, '\n') || '';
 
         const badgeEl = document.getElementById('dyn-badge');
         if (badgeEl) {
