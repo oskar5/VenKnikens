@@ -146,7 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="product-info">
                             <h3 class="product-title" onclick="window.location.href='product.html?id=${encodeURIComponent(prod.id)}'">${prod.title}</h3>
-                            <p class="product-desc">${prod.description ? (prod.description.replace(/<[^>]*>?/gm, '').substring(0, 100) + '...') : ''}</p>
                             <span class="product-availability">${prod.availability || '&nbsp;'}</span>
                             <div class="product-pricing">
                                 <span class="current-price">${prod.price} грн.</span>
