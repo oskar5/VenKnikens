@@ -10,7 +10,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
-    <!-- UI Update: Added characteristic reordering functionality v1.1 -->
     <style>
         :root {
             --primary: #29364a;
@@ -222,12 +221,18 @@
 </head>
 
 <body>
-    <div id="auth-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); z-index:10000; align-items:center; justify-content:center;">
-        <div class="card" style="width: 350px; text-align: center; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+    <div id="auth-modal"
+        style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.8); z-index:10000; align-items:center; justify-content:center;">
+        <div class="card"
+            style="width: 350px; text-align: center; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
             <h2 style="color:var(--primary); margin-bottom: 20px; border-bottom: none;">Вхід в Адмін-панель</h2>
-            <input type="password" id="admin-pwd-input" placeholder="Введіть пароль..." style="margin-bottom: 20px; width:100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box;" onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click();">
-            <button id="btn-login" class="btn btn-success" style="width:100%; font-size: 16px; padding: 12px;">УВІЙТИ</button>
-            <div id="auth-error" style="color: red; margin-top: 10px; font-size: 13px; display: none;">Невірний пароль або сервер перезапущено</div>
+            <input type="password" id="admin-pwd-input" placeholder="Введіть пароль..."
+                style="margin-bottom: 20px; width:100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box;"
+                onkeydown="if(event.key==='Enter') document.getElementById('btn-login').click();">
+            <button id="btn-login" class="btn btn-success"
+                style="width:100%; font-size: 16px; padding: 12px;">УВІЙТИ</button>
+            <div id="auth-error" style="color: red; margin-top: 10px; font-size: 13px; display: none;">Невірний пароль
+                або сервер перезапущено</div>
         </div>
     </div>
     <div class="admin-container">
@@ -465,13 +470,13 @@
                 try {
                     const res = await fetch('/api/products', {
                         method: 'POST',
-                        headers: { 
+                        headers: {
                             'Content-Type': 'application/json',
                             'x-admin-password': adminPwd
                         },
                         body: JSON.stringify(window.tempProducts)
                     }).then(handle401);
-                    
+
                     const data = await res.json();
                     if (data.success) {
                         showToast('✅ Зміни збережено в базі Supabase!');
@@ -495,14 +500,14 @@
                     const data = await res.json();
                     if (data.success) {
                         window.tempProducts = data.products;
-                        const statusText = data.source === 'supabase' 
-                            ? '✅ База Supabase підключена. Зміни зберігаються назавжди.' 
+                        const statusText = data.source === 'supabase'
+                            ? '✅ База Supabase підключена. Зміни зберігаються назавжди.'
                             : '⚠️ УВАГА: Працює локальний режим (Supabase не знайдено). Перевірте змінні в Vercel!';
-                        
+
                         document.getElementById('server-status-text').textContent = statusText;
                         document.getElementById('server-status-card').style.background = data.source === 'supabase' ? '#f0fdf4' : '#fff7ed';
                         document.getElementById('server-status-card').style.borderColor = data.source === 'supabase' ? '#86efac' : '#fdba74';
-                        
+
                         renderTable(false);
                     }
                 } catch (e) {
@@ -623,10 +628,10 @@
                         const formData = new FormData();
                         formData.append('image', file);
                         try {
-                            const res = await fetch('/api/upload', { 
-                                method: 'POST', 
+                            const res = await fetch('/api/upload', {
+                                method: 'POST',
                                 headers: { 'x-admin-password': adminPwd },
-                                body: formData 
+                                body: formData
                             }).then(handle401);
                             const data = await res.json();
                             if (data.success) {
