@@ -263,6 +263,19 @@
                     </div>
                 </div>
 
+                <div class="row">
+                    <div class="col form-group">
+                        <label for="p-groupId">ID групи (для об'єднання декількох товарів в кольори)</label>
+                        <input type="text" id="p-groupId" placeholder="напр. table-120x60">
+                        <div class="hint">Однакові набори товарів повинні мати ОДНАКОВИЙ ID групи.</div>
+                    </div>
+                    <div class="col form-group">
+                        <label for="p-variantColor">Назва кольору варіанту (якщо це окремий товар)</label>
+                        <input type="text" id="p-variantColor" placeholder="напр. Чорний">
+                        <div class="hint">Назва кольору, яка відобразиться у виборі варіантів.</div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="p-title"><span style="color:red">*</span> Повна Назва Товару</label>
                     <input type="text" id="p-title" required
@@ -660,6 +673,8 @@
                     document.getElementById('form-title').innerHTML = 'Редагувати: ' + p.title;
                     document.getElementById('p-id').value = p.id;
                     document.getElementById('p-sku').value = p.sku || '';
+                    document.getElementById('p-groupId').value = p.groupId || '';
+                    document.getElementById('p-variantColor').value = p.variantColor || '';
                     document.getElementById('p-title').value = p.title;
                     document.getElementById('p-cat').value = p.category;
                     document.getElementById('p-subcat').value = p.subcategory || '';
@@ -825,6 +840,8 @@
                     badgeText: document.getElementById('p-badge').value.trim(),
                     availability: document.getElementById('p-avail').value.trim(),
                     sku: document.getElementById('p-sku').value.trim(),
+                    groupId: document.getElementById('p-groupId').value.trim(),
+                    variantColor: document.getElementById('p-variantColor').value.trim(),
                     description: document.getElementById('p-desc').value.trim(),
                     colors, images, specs
                 };
