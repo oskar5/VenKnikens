@@ -286,32 +286,58 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainImg = document.getElementById('main-product-img');
         const colorGroup = document.getElementById('dyn-colors');
         
+        // --- Linked Variants Logic (for separate products) ---
+        let variants = [];
+        if (product.groupId) {
+            variants = dataToUse.filter(p => p.groupId === product.groupId && p.id !== product.id && !p.hidden);
+        }
+
         let allImages = [];
         
-        if (product.colors && product.colors.length > 0) {
-            // New format with colors
+        if ((product.colors && product.colors.length > 0) || variants.length > 0) {
+            // New format with colors or variants
             if (colorGroup) colorGroup.style.display = 'block';
             
             const colorHead = document.getElementById('color-select-head');
             const colorList = colorGroup ? colorGroup.querySelector('.color-options-list') : null;
             
-            // Set initial state to the first color
-            const firstColor = product.colors[0];
+            // Set initial state
             if (colorHead) {
-                colorHead.innerHTML = `<img src="${firstColor.image}" alt="${firstColor.name}" class="color-thumb-sm"><span>${firstColor.name}</span>`;
+                const headImg = product.colors && product.colors[0] ? product.colors[0].image : (product.images ? product.images[0] : '');
+                const headName = product.variantColor || (product.colors && product.colors[0] ? product.colors[0].name : 'Варіант');
+                colorHead.innerHTML = `<img src="${headImg}" alt="${headName}" class="color-thumb-sm"><span>${headName}</span>`;
             }
-            if (mainImg) mainImg.src = firstColor.image;
+            if (mainImg) {
+                mainImg.src = product.colors && product.colors[0] ? product.colors[0].image : (product.images ? product.images[0] : '');
+            }
             
             let colorHtml = '';
-            product.colors.forEach((c, idx) => {
+            
+            // Add internal colors (variants within the same product)
+            if (product.colors) {
+                product.colors.forEach((c, idx) => {
+                    colorHtml += `
+                        <li class="color-option" data-color="${c.name}" data-img="${c.image}">
+                            <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
+                            <span>${c.name}</span>
+                        </li>
+                    `;
+                    allImages.push(c.image);
+                });
+            }
+
+            // Add external variants (linked products via groupId)
+            variants.forEach(v => {
+                const vImg = v.colors && v.colors[0] ? v.colors[0].image : (v.images ? v.images[0] : '');
+                const vName = v.variantColor || (v.colors && v.colors[0] ? v.colors[0].name : 'Інший колір');
                 colorHtml += `
-                    <li class="color-option" data-color="${c.name}" data-img="${c.image}">
-                        <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
-                        <span>${c.name}</span>
+                    <li class="color-option variant-redirect" data-url="product.html?id=${encodeURIComponent(v.id)}">
+                        <img src="${vImg}" alt="${vName}" class="color-thumb-sm">
+                        <span>${vName}</span>
                     </li>
                 `;
-                allImages.push(c.image);
             });
+
             if (colorList) colorList.innerHTML = colorHtml;
             
         } else {
@@ -472,6 +498,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         t.classList.add('active');
                     }
                 });
+            }
+
+            // Grouped Variant Redirect
+            const variantOption = e.target.closest('.variant-redirect');
+            if (variantOption) {
+                const url = variantOption.getAttribute('data-url');
+                if (url) window.location.href = url;
             }
         });
 
