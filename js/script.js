@@ -184,7 +184,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const tab = Array.from(catalogTabs.querySelectorAll('.tab')).find(t => t.getAttribute('data-cat') === cat);
                 if (tab) {
                     tab.click();
+                    // Scroll to catalog section
+                    const catalogSection = document.getElementById('catalog');
+                    if (catalogSection) {
+                        setTimeout(() => catalogSection.scrollIntoView({ behavior: 'smooth' }), 100);
+                    }
                     if (sub) {
+
                         setTimeout(() => {
                             const subTab = Array.from(subTabsContainer.querySelectorAll('span')).find(s => s.getAttribute('data-sub') === sub);
                             if (subTab) subTab.click();
