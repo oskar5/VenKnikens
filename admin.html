@@ -405,6 +405,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 40px;"></th>
                         <th>ID</th>
                         <th>Назва</th>
                         <th>Категорія</th>
@@ -492,7 +493,7 @@
                             'Content-Type': 'application/json',
                             'x-admin-password': adminPwd
                         },
-                        body: JSON.stringify(window.tempProducts)
+                        body: JSON.stringify(window.tempProducts.map((p, idx) => ({ ...p, sortOrder: idx })))
                     }).then(handle401);
 
                     const data = await res.json();
@@ -550,7 +551,8 @@
                         const originalIdx = window.tempProducts.indexOf(p);
                         const isHidden = p.hidden === true;
                         tableBody.innerHTML += `
-                        <tr style="${isHidden ? 'opacity: 0.5; background: #f8fafc;' : ''}">
+                        <tr data-id="${p.id}" style="${isHidden ? 'opacity: 0.5; background: #f8fafc;' : ''}">
+                            <td class="drag-handle-table" style="cursor:grab; text-align:center; color:#94a3b8;"><span class="iconify" data-icon="material-symbols:drag-indicator" style="font-size:20px;"></span></td>
                             <td><strong>${p.id}</strong></td>
                             <td>${p.title} ${isHidden ? '<span style="font-size:10px; background:#64748b; color:#fff; padding:2px 5px; border-radius:4px; margin-left:5px;">ПРИХОВАНО</span>' : ''}</td>
                             <td>${p.category || '-'} ${p.subcategory ? ' / ' + p.subcategory : ''}</td>
@@ -1032,6 +1034,30 @@
                     animation: 150,
                     handle: '.drag-handle',
                     ghostClass: 'sortable-ghost'
+                });
+                new Sortable(tableBody, {
+                    animation: 150,
+                    handle: '.drag-handle-table',
+                    ghostClass: 'sortable-ghost',
+                    onMove: (evt) => {
+                        const query = document.getElementById('product-search').value.trim();
+                        // Disable sorting if filtered
+                        if (query) return false;
+                    },
+                    onEnd: (evt) => {
+                        const newIds = Array.from(tableBody.querySelectorAll('tr')).map(tr => tr.getAttribute('data-id'));
+                        const reordered = [];
+                        newIds.forEach(id => {
+                            const p = window.tempProducts.find(x => x.id === id);
+                            if (p) reordered.push(p);
+                        });
+                        // Add products that were not in the visible list (if any)
+                        window.tempProducts.forEach(p => {
+                            if (!newIds.includes(p.id)) reordered.push(p);
+                        });
+                        window.tempProducts = reordered;
+                        renderTable(false);
+                    }
                 });
             }
         });

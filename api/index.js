@@ -36,7 +36,7 @@ app.get('/js/products.js', async (req, res, next) => {
         const { data, error } = await supabase
             .from('products')
             .select('data')
-            .order('data->title', { ascending: true });
+            .order('data->sortOrder', { ascending: true });
         if (error) throw error;
 
         const products = data.map(row => row.data);
