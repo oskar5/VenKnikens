@@ -162,6 +162,40 @@ document.addEventListener('DOMContentLoaded', () => {
             catalogGrid.innerHTML = html || '<p style="text-align:center; width: 100%; color:#64748b;">Немає товарів в цій категорії</p>';
         };
 
+        const updateUrlHash = (cat, sub) => {
+            if (!cat || cat === 'Категорії') {
+                window.history.replaceState(null, null, ' ');
+                return;
+            }
+            let hash = `#catalog?cat=${encodeURIComponent(cat)}`;
+            if (sub && sub !== 'Всі') hash += `&sub=${encodeURIComponent(sub)}`;
+            window.history.replaceState(null, null, hash);
+        };
+
+        const applyFilterFromHash = () => {
+            const hash = window.location.hash;
+            if (!hash.startsWith('#catalog?')) return false;
+            
+            const params = new URLSearchParams(hash.split('?')[1]);
+            const cat = params.get('cat');
+            const sub = params.get('sub');
+            
+            if (cat) {
+                const tab = Array.from(catalogTabs.querySelectorAll('.tab')).find(t => t.getAttribute('data-cat') === cat);
+                if (tab) {
+                    tab.click();
+                    if (sub) {
+                        setTimeout(() => {
+                            const subTab = Array.from(subTabsContainer.querySelectorAll('span')).find(s => s.getAttribute('data-sub') === sub);
+                            if (subTab) subTab.click();
+                        }, 50);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        };
+
         // Render Tabs
         if (catalogTabs) {
             let tabsHtml = `<span class="tab active" data-cat="Категорії">Категорії</span>`;
@@ -177,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.target.classList.add('active');
                     
                     const cat = e.target.getAttribute('data-cat');
+                    updateUrlHash(cat, null);
                     
                     if (cat !== 'Категорії' && subcatsByCat[cat] && subcatsByCat[cat].size > 0) {
                         let subHtml = `<span class="btn-sm btn-outline-sm active-sub" data-sub="Всі" style="cursor:pointer; background:#29364a; color:#fff;">Всі</span>`;
@@ -208,12 +243,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const cat = catalogTabs.querySelector('.active').getAttribute('data-cat');
                     const sub = e.target.getAttribute('data-sub');
+                    updateUrlHash(cat, sub);
                     renderProducts(cat, sub);
                 }
             });
         }
 
-        renderProducts('Категорії', null);
+        if (!applyFilterFromHash()) {
+            renderProducts('Категорії', null);
+        }
     };
 
     // --- 2.6 Dynamic Product Page ---
@@ -264,7 +302,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ogTitle) { ogTitle = document.createElement('meta'); ogTitle.setAttribute('property', 'og:title'); document.head.appendChild(ogTitle); }
         ogTitle.setAttribute('content', `${product.title} | VenKnikens`);
 
-        document.getElementById('dyn-breadcrumb').textContent = product.title;
+        // Breadcrumbs Logic
+        const breadcrumbs = document.querySelector('.breadcrumbs');
+        if (breadcrumbs) {
+            let bHtml = `<li><a href="index.html">Головна</a></li>`;
+            if (product.category) {
+                bHtml += `<li><a href="index.html#catalog?cat=${encodeURIComponent(product.category)}">${product.category}</a></li>`;
+                if (product.subcategory) {
+                    bHtml += `<li><a href="index.html#catalog?cat=${encodeURIComponent(product.category)}&sub=${encodeURIComponent(product.subcategory)}">${product.subcategory}</a></li>`;
+                }
+            } else {
+                bHtml += `<li><a href="index.html#catalog">Каталог</a></li>`;
+            }
+            bHtml += `<li class="current" id="dyn-breadcrumb">${product.title}</li>`;
+            breadcrumbs.innerHTML = bHtml;
+        }
         document.getElementById('dyn-title').textContent = product.title;
         document.getElementById('dyn-sku').textContent = 'Артикул: ' + (product.sku || '');
         document.getElementById('dyn-price').textContent = product.price + ' грн.';
