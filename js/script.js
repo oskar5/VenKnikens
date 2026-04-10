@@ -258,6 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!applyFilterFromHash()) {
             renderProducts('Категорії', null);
         }
+
+        window.addEventListener('hashchange', applyFilterFromHash);
     };
 
     // --- 2.6 Dynamic Product Page ---
@@ -318,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     bHtml += `<li><a href="index.html#catalog?cat=${encodeURIComponent(product.category)}&sub=${encodeURIComponent(product.subcategory)}">${product.subcategory}</a></li>`;
                 }
             } else {
-                bHtml += `<li><a href="index.html#catalog">Каталог</a></li>`;
+                bHtml += `<li><a href="index.html#catalog">Категорії</a></li>`;
             }
             bHtml += `<li class="current" id="dyn-breadcrumb">${product.title}</li>`;
             breadcrumbs.innerHTML = bHtml;
