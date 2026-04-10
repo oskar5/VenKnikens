@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const updateUrlHash = (cat, sub) => {
             if (!cat || cat === 'Категорії') {
-                window.history.replaceState(null, null, ' ');
+                window.history.replaceState(null, null, '#catalog');
                 return;
             }
             let hash = `#catalog?cat=${encodeURIComponent(cat)}`;
@@ -174,6 +174,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const applyFilterFromHash = () => {
             const hash = window.location.hash;
+            if (hash === '#catalog' || hash === '') {
+                const homeTab = Array.from(catalogTabs.querySelectorAll('.tab')).find(t => t.getAttribute('data-cat') === 'Категорії');
+                if (homeTab) {
+                    homeTab.click();
+                    const catalogSection = document.getElementById('catalog');
+                    if (catalogSection) setTimeout(() => catalogSection.scrollIntoView({ behavior: 'smooth' }), 100);
+                    return true;
+                }
+            }
             if (!hash.startsWith('#catalog?')) return false;
             
             const params = new URLSearchParams(hash.split('?')[1]);
@@ -190,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         setTimeout(() => catalogSection.scrollIntoView({ behavior: 'smooth' }), 100);
                     }
                     if (sub) {
-
                         setTimeout(() => {
                             const subTab = Array.from(subTabsContainer.querySelectorAll('span')).find(s => s.getAttribute('data-sub') === sub);
                             if (subTab) subTab.click();
