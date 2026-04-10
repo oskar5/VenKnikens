@@ -692,7 +692,13 @@
                     if (p.colors) p.colors.forEach(c => colorsContainer.appendChild(createColorRow(c.name, c.image)));
                     
                     specsContainer.innerHTML = '';
-                    if (p.specs) Object.entries(p.specs).forEach(([k, v]) => specsContainer.appendChild(createSpecRow(k, v)));
+                    if (p.specs) {
+                        if (Array.isArray(p.specs)) {
+                            p.specs.forEach(s => specsContainer.appendChild(createSpecRow(s.key, s.val)));
+                        } else {
+                            Object.entries(p.specs).forEach(([k, v]) => specsContainer.appendChild(createSpecRow(k, v)));
+                        }
+                    }
                     
                     formCard.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -720,7 +726,13 @@
                     colorsContainer.innerHTML = '';
                     if (p.colors) p.colors.forEach(c => colorsContainer.appendChild(createColorRow(c.name, c.image)));
                     specsContainer.innerHTML = '';
-                    if (p.specs) Object.entries(p.specs).forEach(([k, v]) => specsContainer.appendChild(createSpecRow(k, v)));
+                    if (p.specs) {
+                        if (Array.isArray(p.specs)) {
+                            p.specs.forEach(s => specsContainer.appendChild(createSpecRow(s.key, s.val)));
+                        } else {
+                            Object.entries(p.specs).forEach(([k, v]) => specsContainer.appendChild(createSpecRow(k, v)));
+                        }
+                    }
                     formCard.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
@@ -782,14 +794,14 @@
                         }
 
                         // Parse Specs: "Ключ:Значення|Ключ2:Значення2"
-                        const specs = {};
+                        const specs = [];
                         if (row.specs) {
                             row.specs.split('|').forEach(s => {
                                 const parts = s.split(':');
                                 if (parts.length >= 2) {
                                     const k = parts.shift().trim();
                                     const v = parts.join(':').trim();
-                                    if (k && v) specs[k] = v;
+                                    if (k && v) specs.push({ key: k, val: v });
                                 }
                             });
                         }
@@ -852,11 +864,11 @@
             productForm.addEventListener('submit', (e) => {
                 e.preventDefault();
                 const idx = parseInt(document.getElementById('editing-idx').value);
-                const specs = {};
+                const specs = [];
                 document.querySelectorAll('.spec-row').forEach(row => {
                     const k = row.querySelector('.spec-key').value.trim();
                     const v = row.querySelector('.spec-val').value.trim();
-                    if (k && v) specs[k] = v;
+                    if (k && v) specs.push({ key: k, val: v });
                 });
                 const colors = []; const images = [];
                 document.querySelectorAll('.color-row').forEach(row => {
@@ -954,14 +966,14 @@
                         }
 
                         // Specs from <param>
-                        const specs = {};
+                        const specs = [];
                         const params = offer.querySelectorAll('param');
                         params.forEach(p => {
                             const name = p.getAttribute('name');
                             const val = p.textContent.trim();
                             // Skip "Назначение" and other SEO fields
                             if (name === 'Назначение' || !name || !val) return;
-                            specs[name] = val;
+                            specs.push({ key: name, val: val });
                         });
 
                         newProducts.push({

@@ -363,8 +363,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const specsList = document.getElementById('dyn-specs-list');
         let specsHtml = '';
         if (product.specs) {
-            for (const [key, value] of Object.entries(product.specs)) {
-                specsHtml += `<div class="m-spec-row"><span class="m-spec-label">${key}</span><span class="m-spec-value">${value}</span></div>`;
+            if (Array.isArray(product.specs)) {
+                product.specs.forEach(s => {
+                    if (s.key && s.val) {
+                        specsHtml += `<div class="m-spec-row"><span class="m-spec-label">${s.key}</span><span class="m-spec-value">${s.val}</span></div>`;
+                    }
+                });
+            } else {
+                for (const [key, value] of Object.entries(product.specs)) {
+                    specsHtml += `<div class="m-spec-row"><span class="m-spec-label">${key}</span><span class="m-spec-value">${value}</span></div>`;
+                }
             }
         }
         if (specsList) specsList.innerHTML = specsHtml;
