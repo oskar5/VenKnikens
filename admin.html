@@ -592,7 +592,7 @@
                     <button type="button" class="btn btn-outline btn-sm move-down" title="Вниз" style="padding:2px 5px; height:21px;"><span class="iconify" data-icon="material-symbols:keyboard-arrow-down" style="font-size:16px;"></span></button>
                 </div>
                 <img src="${img || ''}" class="color-preview ${img ? 'visible' : ''}" alt="">
-                <input type="text" class="color-name" placeholder="Назва кольору" value="${name}" required style="flex:0.4;">
+                <input type="text" class="color-name" placeholder="Назва (опціонально)" value="${name}" style="flex:0.4;">
                 <input type="text" class="color-img" placeholder="Посилання на фото або URL" value="${img}" required>
                 <button type="button" class="btn btn-outline btn-sm upload-img-btn" title="Завантажити фото" style="white-space:nowrap;">
                     <span class="iconify" data-icon="material-symbols:upload" style="vertical-align:middle;"></span>
@@ -874,7 +874,7 @@
                 document.querySelectorAll('.color-row').forEach(row => {
                     const n = row.querySelector('.color-name').value.trim();
                     const i = row.querySelector('.color-img').value.trim();
-                    if (n && i) { colors.push({ name: n, image: i }); images.push(i); }
+                    if (i) { colors.push({ name: n, image: i }); images.push(i); }
                 });
                 const obj = {
                     id: document.getElementById('p-id').value.trim(),

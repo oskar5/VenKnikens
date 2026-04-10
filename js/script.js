@@ -316,13 +316,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add internal colors (variants within the same product)
             if (product.colors) {
                 product.colors.forEach((c, idx) => {
-                    colorHtml += `
-                        <li class="color-option" data-color="${c.name}" data-img="${c.image}">
-                            <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
-                            <span>${c.name}</span>
-                        </li>
-                    `;
-                    allImages.push(c.image);
+                    if (c.name) {
+                        colorHtml += `
+                            <li class="color-option" data-color="${c.name}" data-img="${c.image}">
+                                <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
+                                <span>${c.name}</span>
+                            </li>
+                        `;
+                    }
+                    if (c.image) allImages.push(c.image);
                 });
             }
 
@@ -339,6 +341,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (colorList) colorList.innerHTML = colorHtml;
+            if (colorGroup) {
+                colorGroup.style.display = colorHtml ? 'block' : 'none';
+            }
+            
             
         } else {
             // Old format without colors, just images array
