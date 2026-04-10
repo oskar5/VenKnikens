@@ -554,6 +554,7 @@
                                 <button class="btn btn-outline btn-sm btn-toggle-visibility" data-idx="${originalIdx}" title="${isHidden ? 'Показати на сайті' : 'Приховати з сайту'}">
                                     <span class="iconify" data-icon="${isHidden ? 'material-symbols:visibility-off' : 'material-symbols:visibility'}"></span>
                                 </button>
+                                <button class="btn btn-outline btn-sm btn-copy" data-idx="${originalIdx}" title="Дублювати товар"><span class="iconify" data-icon="material-symbols:content-copy-outline"></span></button>
                                 <button class="btn btn-outline btn-sm btn-edit" data-idx="${originalIdx}"><span class="iconify" data-icon="material-symbols:edit"></span></button>
                                 <button class="btn btn-danger btn-sm btn-delete" data-idx="${originalIdx}"><span class="iconify" data-icon="material-symbols:delete"></span></button>
                             </td>
@@ -663,6 +664,39 @@
                     window.tempProducts[idx].hidden = !window.tempProducts[idx].hidden;
                     renderTable(true);
                     showToast(window.tempProducts[idx].hidden ? '🌑 Товар приховано з сайту' : '☀️ Товар тепер видно на сайті');
+                }
+
+                const copyBtn = e.target.closest('.btn-copy');
+                if (copyBtn) {
+                    const idx = parseInt(copyBtn.getAttribute('data-idx'));
+                    const p = window.tempProducts[idx];
+                    
+                    document.getElementById('editing-idx').value = '-1'; // duplicate is a NEW item
+                    document.getElementById('form-title').innerHTML = 'Дублювання: ' + p.title;
+                    
+                    // Pre-fill form
+                    document.getElementById('p-id').value = p.id + '-copy';
+                    document.getElementById('p-sku').value = p.sku ? p.sku + '-copy' : '';
+                    document.getElementById('p-groupId').value = p.groupId || '';
+                    document.getElementById('p-variantColor').value = p.variantColor || '';
+                    document.getElementById('p-title').value = p.title + ' (Копія)';
+                    document.getElementById('p-cat').value = p.category;
+                    document.getElementById('p-subcat').value = p.subcategory || '';
+                    document.getElementById('p-price').value = p.price;
+                    document.getElementById('p-oldprice').value = p.oldPrice || '';
+                    document.getElementById('p-badge').value = p.badgeText || '';
+                    document.getElementById('p-avail').value = p.availability || '';
+                    document.getElementById('p-desc').value = p.description || '';
+                    
+                    colorsContainer.innerHTML = '';
+                    if (p.colors) p.colors.forEach(c => colorsContainer.appendChild(createColorRow(c.name, c.image)));
+                    
+                    specsContainer.innerHTML = '';
+                    if (p.specs) Object.entries(p.specs).forEach(([k, v]) => specsContainer.appendChild(createSpecRow(k, v)));
+                    
+                    formCard.style.display = 'block';
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    showToast('📋 Дані товару скопійовано у форму');
                 }
 
                 const editBtn = e.target.closest('.btn-edit');
