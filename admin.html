@@ -303,6 +303,37 @@
             display: block;
         }
 
+        .linked-variants-box {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .linked-variant-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .linked-variant-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .linked-variant-item img {
+            width: 30px;
+            height: 30px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
         .result-box {
             margin-top: 20px;
             padding: 20px;
@@ -387,14 +418,15 @@
 
                 <div class="row">
                     <div class="col form-group">
-                        <label for="p-groupId">ID групи (для об'єднання декількох товарів в кольори)</label>
-                        <input type="text" id="p-groupId" placeholder="напр. table-120x60">
-                        <div class="hint">Однакові набори товарів повинні мати ОДНАКОВИЙ ID групи.</div>
+                        <label for="p-groupId">ID групи (ПОВИНЕН БУТИ ОДНАКОВИМ ДЛЯ ВСІХ КОЛЬОРІВ ТОВАРУ)</label>
+                        <input type="text" id="p-groupId" placeholder="напр. premium-table-series">
+                        <div class="hint">Введіть однаковий текст тут для всіх варіантів цього товару.</div>
+                        <div id="linked-variants-preview" class="linked-variants-box"></div>
                     </div>
                     <div class="col form-group">
-                        <label for="p-variantColor">Назва кольору варіанту (якщо це окремий товар)</label>
+                        <label for="p-variantColor">Назва цього кольору (напр. Чорний)</label>
                         <input type="text" id="p-variantColor" placeholder="напр. Чорний">
-                        <div class="hint">Назва кольору, яка відобразиться у виборі варіантів.</div>
+                        <div class="hint">Ця назва з'явиться у виборі кольорів на сайті.</div>
                     </div>
                 </div>
 
@@ -578,6 +610,42 @@
             const specsContainer = document.getElementById('specs-container');
             const colorsContainer = document.getElementById('colors-container');
             const productForm = document.getElementById('product-form');
+            const linkedPreview = document.getElementById('linked-variants-preview');
+
+            const updateLinkedPreview = () => {
+                const gid = document.getElementById('p-groupId').value.trim();
+                const currentPid = document.getElementById('p-id').value.trim();
+                
+                if (!gid) {
+                    linkedPreview.style.display = 'none';
+                    return;
+                }
+
+                const matches = window.tempProducts.filter(p => p.groupId === gid && p.id !== currentPid);
+                
+                if (matches.length === 0) {
+                    linkedPreview.innerHTML = `<div style="color:#64748b;">Цей товар поки єдиний в групі "${gid}"</div>`;
+                } else {
+                    let html = `<div style="font-weight:600; margin-bottom:8px; color:var(--primary);">Знайдено інші кольори в цій групі:</div>`;
+                    matches.forEach(m => {
+                        const img = m.colors?.[0]?.image || m.images?.[0] || '';
+                        html += `
+                            <div class="linked-variant-item">
+                                <img src="${img}" alt="">
+                                <div>
+                                    <div style="font-weight:500;">${m.variantColor || 'Без назви'}</div>
+                                    <div style="font-size:10px; color:#94a3b8;">${m.title}</div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    linkedPreview.innerHTML = html;
+                }
+                linkedPreview.style.display = 'block';
+            };
+
+            document.getElementById('p-groupId').addEventListener('input', updateLinkedPreview);
+            document.getElementById('p-id').addEventListener('input', updateLinkedPreview);
 
             const showToast = (msg, type = 'success') => {
                 let toast = document.getElementById('admin-toast');
@@ -842,6 +910,7 @@
                     formCard.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                     showToast('📋 Дані товару скопійовано у форму');
+                    updateLinkedPreview();
                 }
 
                 const editBtn = e.target.closest('.btn-edit');
@@ -874,6 +943,7 @@
                     }
                     formCard.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
+                    updateLinkedPreview();
                 }
 
                 const delBtn = e.target.closest('.btn-delete');
