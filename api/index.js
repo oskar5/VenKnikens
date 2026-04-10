@@ -40,10 +40,19 @@ app.get('/js/products.js', async (req, res, next) => {
         if (error) throw error;
 
         const products = data.map(row => row.data);
+        
+        // Robust in-memory sort as fallback for JSONB sorting
+        products.sort((a, b) => {
+            const orderA = typeof a.sortOrder === 'number' ? a.sortOrder : 999999;
+            const orderB = typeof b.sortOrder === 'number' ? b.sortOrder : 999999;
+            return orderA - orderB;
+        });
+
         const content = `const productsData = ${JSON.stringify(products, null, 2)};`;
         res.set('Content-Type', 'application/javascript; charset=utf-8');
         res.set('Cache-Control', 'no-cache');
         res.send(content);
+
     } catch (e) {
         console.error('Supabase fetch failed, falling back to local file:', e.message);
         next(); // serve local js/products.js instead
