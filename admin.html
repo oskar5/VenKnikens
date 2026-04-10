@@ -523,7 +523,6 @@
                 <thead>
                     <tr>
                         <th style="width: 30px;"></th>
-                        <th style="width: 120px;">ID</th>
                         <th>Назва товару</th>
                         <th style="width: 180px;">Категорія / Підкатегорія</th>
                         <th style="width: 100px; text-align: right;">Ціна</th>
@@ -670,7 +669,6 @@
                         tableBody.innerHTML += `
                         <tr data-id="${p.id}" style="${isHidden ? 'opacity: 0.5;' : ''}">
                             <td class="drag-handle-table"><span class="iconify" data-icon="material-symbols:drag-indicator" style="font-size:18px;"></span></td>
-                            <td><span class="product-id-cell" title="${p.id}">${p.id.length > 15 ? p.id.substring(0, 12) + '...' : p.id}</span></td>
                             <td style="font-weight: 500;">
                                 ${p.title}
                                 ${isHidden ? '<span style="font-size:9px; background:#94a3b8; color:#fff; padding:1px 4px; border-radius:3px; margin-left:4px; vertical-align:middle;">ПРИХОВАНО</span>' : ''}
