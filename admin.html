@@ -24,6 +24,39 @@
         .drag-handle:active { cursor: grabbing; }
         .sortable-ghost { opacity: 0.4; background: #f1f5f9; border: 2px dashed #cbd5e1 !important; }
 
+        /* Back to Top Button */
+        .back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 46px;
+            height: 46px;
+            background: #29364a;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-5px);
+            background: #2563eb;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             background-color: var(--bg);
@@ -1041,7 +1074,6 @@
                     ghostClass: 'sortable-ghost',
                     onMove: (evt) => {
                         const query = document.getElementById('product-search').value.trim();
-                        // Disable sorting if filtered
                         if (query) return false;
                     },
                     onEnd: (evt) => {
@@ -1051,7 +1083,6 @@
                             const p = window.tempProducts.find(x => x.id === id);
                             if (p) reordered.push(p);
                         });
-                        // Add products that were not in the visible list (if any)
                         window.tempProducts.forEach(p => {
                             if (!newIds.includes(p.id)) reordered.push(p);
                         });
@@ -1060,6 +1091,22 @@
                     }
                 });
             }
+
+            // Back to Top Button
+            const btt = document.createElement('button');
+            btt.className = 'back-to-top';
+            btt.innerHTML = '<span class="iconify" data-icon="material-symbols:arrow-upward-rounded" data-width="24"></span>';
+            btt.title = 'Вгору';
+            document.body.appendChild(btt);
+
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 400) btt.classList.add('visible');
+                else btt.classList.remove('visible');
+            });
+
+            btt.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         });
     </script>
 </body>
