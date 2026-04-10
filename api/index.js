@@ -150,10 +150,20 @@ const checkoutRateLimiter = (req, res, next) => {
 app.get('/api/products', async (req, res) => {
     if (supabase) {
         try {
-            const { data, error } = await supabase.from('products').select('data');
+            const { data, error } = await supabase.from('products').select('data').order('data->sortOrder', { ascending: true });
             if (error) throw error;
-            return res.json({ success: true, products: data.map(r => r.data), source: 'supabase' });
+            
+            const products = data.map(r => r.data);
+            // Robust in-memory sort
+            products.sort((a, b) => {
+                const orderA = typeof a.sortOrder === 'number' ? a.sortOrder : 999999;
+                const orderB = typeof b.sortOrder === 'number' ? b.sortOrder : 999999;
+                return orderA - orderB;
+            });
+            
+            return res.json({ success: true, products, source: 'supabase' });
         } catch (e) {
+
             console.error('Supabase read failed, falling back to local file:', e.message);
         }
     }
