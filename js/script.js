@@ -172,16 +172,30 @@ document.addEventListener('DOMContentLoaded', () => {
             window.history.replaceState(null, null, hash);
         };
 
+        const resetToCategories = () => {
+            if (catalogTabs) {
+                catalogTabs.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                const homeTab = Array.from(catalogTabs.querySelectorAll('.tab')).find(t => t.getAttribute('data-cat') === 'Категорії');
+                if (homeTab) homeTab.classList.add('active');
+            }
+            if (subTabsContainer) {
+                subTabsContainer.style.display = 'none';
+                subTabsContainer.innerHTML = '';
+            }
+            updateUrlHash('Категорії', null);
+            renderProducts('Категорії', null);
+            
+            const catalogSection = document.getElementById('catalog');
+            if (catalogSection) {
+                setTimeout(() => catalogSection.scrollIntoView({ behavior: 'smooth' }), 50);
+            }
+        };
+
         const applyFilterFromHash = () => {
             const hash = window.location.hash;
             if (hash === '#catalog' || hash === '') {
-                const homeTab = Array.from(catalogTabs.querySelectorAll('.tab')).find(t => t.getAttribute('data-cat') === 'Категорії');
-                if (homeTab) {
-                    homeTab.click();
-                    const catalogSection = document.getElementById('catalog');
-                    if (catalogSection) setTimeout(() => catalogSection.scrollIntoView({ behavior: 'smooth' }), 100);
-                    return true;
-                }
+                resetToCategories();
+                return true;
             }
             if (!hash.startsWith('#catalog?')) return false;
             
@@ -268,6 +282,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         window.addEventListener('hashchange', applyFilterFromHash);
+
+        // Global interceptor for navigation links
+        document.querySelectorAll('a[href="#catalog"]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetToCategories();
+            });
+        });
     };
 
     // --- 2.6 Dynamic Product Page ---
