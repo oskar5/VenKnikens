@@ -47,6 +47,10 @@
             outline: none;
         }
 
+        .back-to-top * {
+            pointer-events: none;
+        }
+
         .back-to-top.visible {
             opacity: 1;
             visibility: visible;
@@ -1256,23 +1260,36 @@
                 });
             }
 
-            // Back to Top Button
-            const btt = document.createElement('button');
-            btt.className = 'back-to-top';
-            btt.innerHTML = '<span class="iconify" data-icon="material-symbols:arrow-upward-rounded" data-width="24"></span>';
-            btt.title = 'Вгору';
-            document.body.appendChild(btt);
-
+            // Back to Top Logic
+            const btt = document.getElementById('back-to-top');
+            
             window.addEventListener('scroll', () => {
-                if (window.scrollY > 400) btt.classList.add('visible');
-                else btt.classList.remove('visible');
+                if (window.pageYOffset > 400 || document.documentElement.scrollTop > 400) {
+                    btt.classList.add('visible');
+                } else {
+                    btt.classList.remove('visible');
+                }
             });
 
-            btt.addEventListener('click', () => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            btt.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+                // Fallback for older browsers or issues with smooth scroll
+                setTimeout(() => {
+                    if (window.pageYOffset > 0) {
+                        window.scrollTo(0, 0);
+                    }
+                }, 500);
             });
         });
     </script>
+
+    <button id="back-to-top" class="back-to-top" title="Вгору">
+        <span class="iconify" data-icon="material-symbols:arrow-upward-rounded" data-width="24"></span>
+    </button>
 </body>
 
 </html>
