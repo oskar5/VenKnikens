@@ -494,7 +494,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        if (specsList) specsList.innerHTML = specsHtml;
+        if (specsList) {
+            specsList.innerHTML = specsHtml;
+            const specsContainer = specsList.closest('.m-specs');
+            if (specsContainer) {
+                specsContainer.style.display = specsHtml.trim() ? 'block' : 'none';
+            }
+        }
     };
 
     // --- 3. Product Page Controllers ---
