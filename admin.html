@@ -724,13 +724,11 @@
                     <span class="iconify" data-icon="material-symbols:add" style="vertical-align: middle;"></span>
                     Створити новий товар
                 </button>
-                <button type="button" class="btn btn-outline" id="btn-csv-template"
-                    style="border-color:#94a3b8; color:#64748b;">
+                <button type="button" class="btn btn-outline" id="btn-csv-template">
                     <span class="iconify" data-icon="material-symbols:download" style="vertical-align: middle;"></span>
                     Шаблон CSV
                 </button>
-                <button type="button" class="btn btn-outline" id="btn-csv-import"
-                    style="border-color:#94a3b8; color:#64748b;">
+                <button type="button" class="btn btn-outline" id="btn-csv-import">
                     <span class="iconify" data-icon="material-symbols:upload-file"
                         style="vertical-align: middle;"></span> Імпорт CSV
                 </button>
@@ -738,23 +736,23 @@
 
                 <div style="position: relative; flex: 1; min-width: 250px;">
                     <span class="iconify" data-icon="material-symbols:search"
-                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></span>
+                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></span>
                     <input type="text" id="product-search" placeholder="Пошук за назвою або ID..."
                         style="padding-left: 38px; margin-bottom: 0;">
                 </div>
             </div>
 
             <div
-                style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px dashed #cbd5e1;">
+                style="display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; background: var(--bg); padding: 15px; border-radius: 10px; border: 1px dashed var(--border);">
                 <div style="flex: 1; position: relative;">
                     <span class="iconify" data-icon="material-symbols:link"
-                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></span>
+                        style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></span>
                     <input type="text" id="xml-feed-url"
                         placeholder="Вставте посилання на XML/YML фід (Rozetka/Prom)..."
                         style="padding-left: 38px; margin-bottom: 0; width: 100%; box-sizing: border-box;">
                 </div>
-                <button type="button" class="btn btn-primary" id="btn-xml-import"
-                    style="background:#29364a; display: flex; align-items: center; gap: 8px;">
+                <button type="button" class="btn" id="btn-xml-import"
+                    style="display: flex; align-items: center; gap: 8px;">
                     <span class="iconify" data-icon="material-symbols:sync" style="font-size: 20px;"></span> Імпорт з
                     XML/YML
                 </button>
@@ -938,7 +936,7 @@
 
                 tableBody.innerHTML = '';
                 if (filtered.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:#64748b; padding: 30px;">${query ? 'Нічого не знайдено за вашим запитом' : 'Немає товарів. Створіть перший!'}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding: 30px;">${query ? 'Нічого не знайдено за вашим запитом' : 'Немає товарів. Створіть перший!'}</td></tr>`;
                 } else {
                     filtered.forEach((p) => {
                         const originalIdx = window.tempProducts.indexOf(p);
@@ -950,13 +948,13 @@
                                 ${p.title}
                                 ${isHidden ? '<span style="font-size:9px; background:#94a3b8; color:#fff; padding:1px 4px; border-radius:3px; margin-left:4px; vertical-align:middle;">ПРИХОВАНО</span>' : ''}
                             </td>
-                            <td style="font-size: 13px; color: #64748b;">
-                                <div style="font-weight: 500; color: #475569;">${p.category || '-'}</div>
+                            <td style="font-size: 13px; color: var(--text-muted);">
+                                <div style="font-weight: 500; color: var(--text);">${p.category || '-'}</div>
                                 <div style="font-size: 11px;">${p.subcategory || ''}</div>
                             </td>
                             <td style="text-align: right; white-space: nowrap;">
-                                <div style="font-weight: 700; color: #0f172a;">${p.price} <small style="font-weight:400;">грн</small></div>
-                                ${p.oldPrice ? '<div style="font-size:11px; text-decoration:line-through; color:#94a3b8;">' + p.oldPrice + '</div>' : ''}
+                                <div style="font-weight: 700; color: var(--text);">${p.price} <small style="font-weight:400;">грн</small></div>
+                                ${p.oldPrice ? '<div style="font-size:11px; text-decoration:line-through; color:var(--text-muted);">' + p.oldPrice + '</div>' : ''}
                             </td>
                             <td>
                                 <div class="actions-cell">
