@@ -211,3 +211,27 @@
     color: #94a3b8;
     font-size: 14px;
 }
+
+.m-product-availability {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.m-product-availability.in-stock {
+    color: #10b981;
+}
+
+.m-product-availability.out-of-stock {
+    color: #ef4444;
+}
+
+.order-btn:disabled {
+    background-color: #94a3b8 !important;
+    border-color: #94a3b8 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
+}

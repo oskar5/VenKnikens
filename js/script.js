@@ -361,6 +361,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dyn-old-price').textContent = product.oldPrice ? (product.oldPrice + ' грн.') : '';
         document.getElementById('dyn-desc').innerText = product.description.replace(/\\n/g, '\n') || '';
 
+        const updateAvailabilityUI = (isAvailable) => {
+            const availEl = document.getElementById('dyn-avail');
+            const orderBtn = document.querySelector('.order-btn');
+            if (availEl) {
+                if (isAvailable) {
+                    availEl.innerHTML = '<span class="iconify" data-icon="material-symbols:check-circle"></span> В наявності';
+                    availEl.className = 'm-product-availability in-stock';
+                } else {
+                    availEl.innerHTML = '<span class="iconify" data-icon="material-symbols:cancel"></span> Немає в наявності';
+                    availEl.className = 'm-product-availability out-of-stock';
+                }
+            }
+            if (orderBtn) {
+                orderBtn.disabled = !isAvailable;
+                orderBtn.textContent = isAvailable ? 'ЗАМОВИТИ' : 'НЕМАЄ В НАЯВНОСТІ';
+            }
+        };
+
         const badgeEl = document.getElementById('dyn-badge');
         if (badgeEl) {
             if (product.badgeText) {
@@ -393,9 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Set initial state
             if (colorHead) {
-                const headImg = product.colors && product.colors[0] ? product.colors[0].image : (product.images ? product.images[0] : '');
-                const headName = product.variantColor || (product.colors && product.colors[0] ? product.colors[0].name : 'Варіант');
+                const firstColor = product.colors && product.colors[0] ? product.colors[0] : null;
+                const headImg = firstColor ? firstColor.image : (product.images ? product.images[0] : '');
+                const headName = product.variantColor || (firstColor ? firstColor.name : 'Варіант');
                 colorHead.innerHTML = `<img src="${headImg}" alt="${headName}" class="color-thumb-sm"><span>${headName}</span>`;
+                
+                // Set initial availability
+                updateAvailabilityUI(firstColor ? (firstColor.available !== false) : true);
             }
             if (mainImg) {
                 mainImg.src = product.colors && product.colors[0] ? product.colors[0].image : (product.images ? product.images[0] : '');
@@ -407,10 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (product.colors) {
                 product.colors.forEach((c, idx) => {
                     if (c.name) {
+                        const isAvail = c.available !== false;
                         colorHtml += `
-                            <li class="color-option" data-color="${c.name}" data-img="${c.image}">
+                            <li class="color-option" data-color="${c.name}" data-img="${c.image}" data-avail="${isAvail}">
                                 <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
-                                <span>${c.name}</span>
+                                <span>${c.name} ${isAvail ? '' : '<small style="color:#ef4444; margin-left:5px;">(немає)</small>'}</span>
                             </li>
                         `;
                     }
@@ -582,6 +605,24 @@ document.addEventListener('DOMContentLoaded', () => {
             if (colorOption) {
                 const newColor = colorOption.getAttribute('data-color');
                 const newImg = colorOption.getAttribute('data-img');
+                const isAvail = colorOption.getAttribute('data-avail') !== 'false';
+                
+                // Update availability UI
+                const availEl = document.getElementById('dyn-avail');
+                const orderBtn = document.querySelector('.order-btn');
+                if (availEl) {
+                    if (isAvail) {
+                        availEl.innerHTML = '<span class="iconify" data-icon="material-symbols:check-circle"></span> В наявності';
+                        availEl.className = 'm-product-availability in-stock';
+                    } else {
+                        availEl.innerHTML = '<span class="iconify" data-icon="material-symbols:cancel"></span> Немає в наявності';
+                        availEl.className = 'm-product-availability out-of-stock';
+                    }
+                }
+                if (orderBtn) {
+                    orderBtn.disabled = !isAvail;
+                    orderBtn.textContent = isAvail ? 'ЗАМОВИТИ' : 'НЕМАЄ В НАЯВНОСТІ';
+                }
                 
                 // Update dropdown header text/icon
                 const head = document.getElementById('color-select-head');
