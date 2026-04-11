@@ -1336,12 +1336,14 @@
 
             // Theme Toggle Logic
             const themeToggle = document.getElementById('themeToggle');
-            const themeIcon = document.getElementById('themeIcon');
             
             const setTheme = (theme) => {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('admin-theme', theme);
-                themeIcon.setAttribute('data-icon', theme === 'dark' ? 'material-symbols:light-mode-outline' : 'material-symbols:dark-mode-outline');
+                const themeIcon = document.getElementById('themeIcon');
+                if (themeIcon) {
+                    themeIcon.setAttribute('data-icon', theme === 'dark' ? 'material-symbols:light-mode-outline' : 'material-symbols:dark-mode-outline');
+                }
             };
 
             const toggleTheme = () => {
@@ -1349,15 +1351,13 @@
                 setTheme(currentTheme === 'light' ? 'dark' : 'light');
             };
 
-            themeToggle.addEventListener('click', toggleTheme);
+            if (themeToggle) {
+                themeToggle.addEventListener('click', toggleTheme);
+            }
             
-            // Check for saved theme
-            const savedTheme = localStorage.getItem('admin-theme');
+            // Update icon for saved theme
             if (savedTheme) {
                 setTheme(savedTheme);
-            } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                // Optional: follow system preference
-                // setTheme('dark');
             }
 
             // --- 0. Initialization & UI Helpers ---
