@@ -130,6 +130,10 @@ nav ul li a:hover {
         display: flex;
     }
 
+    .header-container {
+        padding: 0 1.5rem;
+    }
+
     nav {
         position: fixed;
         top: var(--header-height);

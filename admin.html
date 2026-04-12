@@ -570,6 +570,23 @@
         }
 
         /* Hidden by default until "Add" or "Edit" is clicked */
+        
+        @media (max-width: 768px) {
+            .row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .card {
+                padding: 15px;
+                overflow-x: auto;
+            }
+            body {
+                padding: 10px;
+            }
+            th, td {
+                padding: 10px;
+            }
+        }
     </style>
 </head>
 

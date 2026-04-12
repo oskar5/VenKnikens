@@ -326,6 +326,20 @@
 }
 
 @media (max-width: 768px) {
+    .reviews-container {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+
+    .reviews-text-col {
+        padding-right: 0;
+        text-align: center;
+    }
+
+    .reviews-title {
+        font-size: 28px;
+    }
+
     .materials-grid {
         grid-template-columns: 1fr;
     }
