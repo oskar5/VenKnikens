@@ -122,8 +122,10 @@
 .modal-main-img img {
     display: block;
     width: 100%;
-    max-height: 450px;
-    object-fit: cover;
+    max-height: 500px;
+    object-fit: contain;
+    object-position: center top;
+    background-color: #f8fafc;
 }
 
 /* Modal Info */
