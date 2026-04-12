@@ -46,17 +46,35 @@
 
 @media (max-width: 768px) {
     :root {
-        --font-size-h1: 36px;
-        --font-size-p: 18px;
+        --font-size-h1: 32px;
+        --font-size-p: 16px;
     }
 
     .hero-content {
         text-align: center;
         margin: 0 auto;
+        padding: 0 10px;
+    }
+
+    .hero-content .btn {
+        display: block;
+        width: 100%;
+        text-align: center;
+        box-sizing: border-box;
     }
 
     .hero-description {
         margin: 0 auto 48px auto;
+    }
+
+    .hero-title {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 400px) {
+    .hero-title {
+        font-size: 24px;
     }
 }
 
