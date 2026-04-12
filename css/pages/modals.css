@@ -425,8 +425,9 @@ body.modal-open {
 
 @media (max-width: 1024px) {
     .modal-main-img img {
-        max-height: none;
+        max-height: 600px;
         height: auto;
+        object-fit: contain;
     }
 }
 
@@ -449,15 +450,17 @@ body.modal-open {
         height: 70px;
     }
     .modal-main-img img {
-        max-height: none;
+        max-height: 500px;
         height: auto;
+        object-fit: contain;
     }
 }
 
 @media (max-width: 480px) {
     .modal-main-img img {
-        max-height: none;
+        max-height: 450px;
         height: auto;
+        object-fit: contain;
     }
     .modal-thumb {
         width: 60px;
