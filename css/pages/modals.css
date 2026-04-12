@@ -425,21 +425,34 @@ body.modal-open {
 
 @media (max-width: 768px) {
     .modal-gallery {
-        flex-direction: column;
+        flex-direction: column-reverse;
+        gap: 15px;
     }
     .modal-thumbs {
         flex-direction: row;
         overflow-x: auto;
-        padding-bottom: 5px;
+        padding-bottom: 8px;
         width: 100%;
+        justify-content: flex-start;
+        -webkit-overflow-scrolling: touch;
     }
     .modal-thumb {
         flex-shrink: 0;
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
     }
     .modal-main-img img {
+        max-height: 550px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-main-img img {
         max-height: 400px;
+    }
+    .modal-thumb {
+        width: 60px;
+        height: 60px;
     }
 }
 
