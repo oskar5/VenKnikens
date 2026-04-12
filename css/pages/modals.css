@@ -458,7 +458,7 @@ body.modal-open {
 
 @media (max-width: 480px) {
     .modal-main-img img {
-        max-height: 450px;
+        max-height: 50vh;
         height: auto;
         object-fit: contain;
     }

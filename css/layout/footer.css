@@ -115,7 +115,8 @@
     }
 
     .footer-identity,
-    .footer-socials {
+    .footer-socials,
+    .footer-col .contact-item {
         align-items: center;
         justify-content: center;
     }
