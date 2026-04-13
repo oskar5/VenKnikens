@@ -132,6 +132,8 @@
 .modal-info {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .m-product-sku {
@@ -186,6 +188,9 @@
 .m-spec-row {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px;
     padding: 12px 0;
     border-bottom: 1px solid #f1f5f9;
     font-size: 15px;
