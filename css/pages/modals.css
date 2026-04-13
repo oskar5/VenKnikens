@@ -133,7 +133,6 @@
     display: flex;
     flex-direction: column;
     min-width: 0;
-    overflow: hidden;
 }
 
 .m-product-sku {
@@ -178,6 +177,8 @@
     line-height: 1.5;
     margin-bottom: 20px;
     white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .m-specs {
