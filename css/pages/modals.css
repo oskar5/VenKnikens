@@ -217,6 +217,7 @@
     overflow-wrap: break-word;
     max-width: 60%;
     flex-shrink: 1;
+    min-width: 0;
 }
 
 .m-actions {
@@ -490,6 +491,28 @@ body.modal-open {
     .modal-thumb {
         width: 60px;
         height: 60px;
+    }
+
+    /* Stack spec rows vertically on phone */
+    .m-spec-row {
+        flex-direction: column;
+        gap: 3px;
+        align-items: flex-start;
+    }
+    .m-spec-label {
+        font-size: 12px;
+        color: #94a3b8;
+    }
+    .m-spec-value {
+        max-width: 100%;
+        text-align: left;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    /* Fix product title size on phone */
+    .m-product-title {
+        font-size: 22px;
     }
 }
 
