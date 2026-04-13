@@ -81,6 +81,9 @@
     display: flex;
     gap: 20px;
     align-items: flex-start;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .modal-thumbs {
@@ -448,19 +451,28 @@ body.modal-open {
     .modal-gallery {
         flex-direction: column-reverse;
         gap: 15px;
+        width: 100%;
+        max-width: 100%;
     }
     .modal-thumbs {
         flex-direction: row;
         overflow-x: auto;
+        overflow-y: hidden;
         padding-bottom: 8px;
         width: 100%;
+        max-width: 100%;
         justify-content: flex-start;
         -webkit-overflow-scrolling: touch;
+        flex-shrink: 0;
     }
     .modal-thumb {
         flex-shrink: 0;
         width: 70px;
         height: 70px;
+    }
+    .modal-main-img {
+        width: 100%;
+        max-width: 100%;
     }
     .modal-main-img img {
         max-height: 500px;
