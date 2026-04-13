@@ -3,11 +3,72 @@
    --------------------------------------------------------- */
 .hero {
     height: 100vh;
-    background: linear-gradient(to right, rgba(12, 18, 32, 0.9) 30%, rgba(12, 18, 32, 0.4) 100%),
-        url('../img/hero-bg.webp') center/cover no-repeat;
+    position: relative;
     display: flex;
     align-items: center;
     color: var(--text-white);
+    overflow: hidden;
+}
+
+/* Slideshow background */
+.hero-slideshow {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.hero-slide-bg {
+    position: absolute;
+    inset: 0;
+    background-position: center 20%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 1.2s ease-in-out;
+}
+
+.hero-slide-bg.active {
+    opacity: 1;
+}
+
+/* Dark overlay over each slide */
+.hero-slide-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(12, 18, 32, 0.75) 30%, rgba(12, 18, 32, 0.3) 100%);
+}
+
+/* Dot indicators */
+.hero-dots {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 2;
+}
+
+.hero-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+    border: 2px solid rgba(255,255,255,0.7);
+    cursor: pointer;
+    transition: background 0.3s, transform 0.3s;
+}
+
+.hero-dot.active {
+    background: #fff;
+    transform: scale(1.3);
+}
+
+/* Content sits above slideshow */
+.hero .container {
+    position: relative;
+    z-index: 1;
 }
 
 .hero-content {

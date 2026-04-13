@@ -90,10 +90,21 @@
     <main>
         <!-- Hero Section -->
         <section class="hero" id="home">
+            <!-- Slideshow backgrounds -->
+            <div class="hero-slideshow" aria-hidden="true">
+                <div class="hero-slide-bg active" style="background-image: url('img/hero-slide1.jpg');"></div>
+                <div class="hero-slide-bg" style="background-image: url('img/hero-slide2.jpg');"></div>
+            </div>
+
+            <!-- Dot indicators -->
+            <div class="hero-dots">
+                <button class="hero-dot active" aria-label="Слайд 1"></button>
+                <button class="hero-dot" aria-label="Слайд 2"></button>
+            </div>
+
             <div class="container">
                 <div class="hero-content">
-                    <h1 class="hero-title">VenKnikens — Твій затишний простір корисних дрібниць </h1>
-
+                    <h1 class="hero-title">VenKnikens — Твій затишний простір корисних дрібниць</h1>
                     <a href="#catalog" class="btn" style="text-shadow: 0 1px 3px rgba(0,0,0,0.3);">Перейти до
                         категорій</a>
                 </div>

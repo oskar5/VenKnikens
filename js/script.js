@@ -41,6 +41,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- 1.5 Hero Slideshow ---
+    const initHeroSlideshow = () => {
+        const slides = document.querySelectorAll('.hero-slide-bg');
+        const dots = document.querySelectorAll('.hero-dot');
+        let currentSlide = 0;
+        let slideInterval;
+
+        if (!slides.length) return;
+
+        const showSlide = (index) => {
+            slides[currentSlide].classList.remove('active');
+            if (dots[currentSlide]) dots[currentSlide].classList.remove('active');
+            
+            currentSlide = index;
+            
+            slides[currentSlide].classList.add('active');
+            if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+        };
+
+        const nextSlide = () => {
+            let nextIndex = (currentSlide + 1) % slides.length;
+            showSlide(nextIndex);
+        };
+
+        const startSlideshow = () => {
+            slideInterval = setInterval(nextSlide, 5000);
+        };
+
+        const stopSlideshow = () => {
+            clearInterval(slideInterval);
+        };
+
+        dots.forEach((dot, idx) => {
+            dot.addEventListener('click', () => {
+                stopSlideshow();
+                showSlide(idx);
+                startSlideshow();
+            });
+        });
+
+        startSlideshow();
+    };
+    initHeroSlideshow();
+
     // --- 2. Review Slider (Homepage) ---
     const initReviewSlider = () => {
         const slides = document.querySelectorAll('.slide');
