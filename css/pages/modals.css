@@ -147,6 +147,8 @@
     color: #29364a;
     line-height: 1.2;
     margin-bottom: 5px;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .m-product-pricing {
@@ -201,6 +203,11 @@
 .m-spec-value {
     color: #1e293b;
     font-weight: 500;
+    text-align: right;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 60%;
+    flex-shrink: 1;
 }
 
 .m-actions {
