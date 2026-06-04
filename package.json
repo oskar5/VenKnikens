@@ -4,8 +4,8 @@
   "description": "VenKnikens — Твій затишний простір корисних дрібниць",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node api/index.js",
+    "dev": "node api/index.js"
   },
   "engines": {
     "node": ">=18.x"
