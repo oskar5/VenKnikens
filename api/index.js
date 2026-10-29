@@ -145,6 +145,29 @@ const checkoutRateLimiter = (req, res, next) => {
 };
 
 // ==============================
+// API: Keep-alive / Ping (prevents Supabase from pausing)
+// ==============================
+app.get('/api/ping', async (req, res) => {
+    try {
+        if (!supabase) {
+            return res.json({ success: true, message: 'Server alive, Supabase not configured', time: new Date().toISOString() });
+        }
+        // Minimal query to keep Supabase active
+        const { data, error } = await supabase.from('products').select('id').limit(1);
+        if (error) throw error;
+        res.json({
+            success: true,
+            message: 'Supabase ping successful',
+            count: data ? data.length : 0,
+            time: new Date().toISOString()
+        });
+    } catch (e) {
+        console.error('Keep-alive ping failed:', e.message);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ==============================
 // API: Get all products
 // ==============================
 app.get('/api/products', async (req, res) => {
