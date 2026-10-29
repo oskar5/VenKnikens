@@ -326,6 +326,76 @@ app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) =
     }
 });
 
+// ==============================
+// API: Upsert single product
+// ==============================
+app.put('/api/products/:id', requireAdmin, async (req, res) => {
+    try {
+        const productId = req.params.id;
+        const product = req.body;
+        if (!product || typeof product !== 'object') {
+            return res.status(400).json({ success: false, error: 'Expected product object' });
+        }
+
+        if (supabase) {
+            const { error } = await supabase
+                .from('products')
+                .upsert({ id: String(productId), data: product });
+            if (error) throw error;
+        }
+
+        // Also update local file
+        try {
+            const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
+            const match = content.match(/const productsData\s*=\s*(\[[\s\S]*\]);/);
+            if (match) {
+                let products = JSON.parse(match[1]);
+                const idx = products.findIndex(p => String(p.id) === String(productId));
+                if (idx >= 0) products[idx] = product;
+                else products.push(product);
+                fs.writeFileSync(PRODUCTS_FILE, `const productsData = ${JSON.stringify(products, null, 2)};`, 'utf8');
+            }
+        } catch (_) {}
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ==============================
+// API: Delete single product
+// ==============================
+app.delete('/api/products/:id', requireAdmin, async (req, res) => {
+    try {
+        const productId = req.params.id;
+
+        if (supabase) {
+            const { error } = await supabase
+                .from('products')
+                .delete()
+                .eq('id', String(productId));
+            if (error) throw error;
+        }
+
+        try {
+            const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
+            const match = content.match(/const productsData\s*=\s*(\[[\s\S]*\]);/);
+            if (match) {
+                let products = JSON.parse(match[1]);
+                products = products.filter(p => String(p.id) !== String(productId));
+                fs.writeFileSync(PRODUCTS_FILE, `const productsData = ${JSON.stringify(products, null, 2)};`, 'utf8');
+            }
+        } catch (_) {}
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`✅ Сервер запущено на порту ${PORT}`);
 });

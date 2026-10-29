@@ -665,12 +665,14 @@
                 <div class="row">
                     <div class="col form-group">
                         <label for="p-cat"><span style="color:red">*</span> Категорія (Розділ)</label>
-                        <input type="text" id="p-cat" required placeholder="напр. Столи">
+                        <input type="text" id="p-cat" required placeholder="напр. Столи" list="cat-list" autocomplete="off">
+                        <datalist id="cat-list"></datalist>
                         <div class="hint">Усі товари з однаковою категорією об'єднаються у вкладку на головній.</div>
                     </div>
                     <div class="col form-group">
                         <label for="p-subcat">Підкатегорія (Підрозділ)</label>
-                        <input type="text" id="p-subcat" placeholder="напр. Комп'ютерні">
+                        <input type="text" id="p-subcat" placeholder="напр. Комп'ютерні" list="subcat-list" autocomplete="off">
+                        <datalist id="subcat-list"></datalist>
                         <div class="hint">Фільтр всередині самої категорії (необов'язково).</div>
                     </div>
                 </div>
@@ -688,9 +690,16 @@
                         <label for="p-badge">Стікер (SALE, ТОП, тощо)</label>
                         <input type="text" id="p-badge" placeholder="Якщо порожньо - стікера не буде">
                     </div>
-                    <div class="col form-group">
-                        <label for="p-avail">Наявність</label>
-                        <input type="text" id="p-avail" value="В наявності">
+                    <div class="col form-group" style="display:flex; flex-direction:column; justify-content:center;">
+                        <label style="margin-bottom:12px;">Наявність</label>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <label class="switch" style="margin:0;">
+                                <input type="checkbox" id="p-avail-toggle" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <span id="p-avail-label" style="font-size:14px; font-weight:500; color:var(--text);">В наявності</span>
+                            <input type="hidden" id="p-avail" value="В наявності">
+                        </div>
                     </div>
                 </div>
 
@@ -775,9 +784,25 @@
                 </button>
             </div>
 
+            <!-- Bulk actions bar (hidden until items selected) -->
+            <div id="bulk-actions-bar" style="display:none; padding: 10px 15px; background: var(--primary); color: white; border-radius: 8px; margin-bottom: 10px; display: none; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <span id="bulk-count-label" style="font-weight:500; flex:1;">0 вибрано</span>
+                <button type="button" class="btn" id="bulk-show" style="background:rgba(255,255,255,0.2); font-size:13px;">
+                    <span class="iconify" data-icon="material-symbols:visibility" style="vertical-align:middle;"></span> Показати
+                </button>
+                <button type="button" class="btn" id="bulk-hide" style="background:rgba(255,255,255,0.2); font-size:13px;">
+                    <span class="iconify" data-icon="material-symbols:visibility-off" style="vertical-align:middle;"></span> Приховати
+                </button>
+                <button type="button" class="btn" id="bulk-delete" style="background:#ef4444; font-size:13px;">
+                    <span class="iconify" data-icon="material-symbols:delete" style="vertical-align:middle;"></span> Видалити
+                </button>
+                <button type="button" class="btn btn-outline" id="bulk-cancel" style="background:transparent; border-color:rgba(255,255,255,0.4); color:white; font-size:13px;">Скасувати</button>
+            </div>
+
             <table>
                 <thead>
                     <tr>
+                        <th style="width: 30px;"><input type="checkbox" id="select-all-cb" title="Вибрати всі" style="cursor:pointer; width:16px; height:16px;"></th>
                         <th style="width: 30px;"></th>
                         <th>Назва товару</th>
                         <th style="width: 180px;">Категорія / Підкатегорія</th>
@@ -886,6 +911,44 @@
                 toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
             };
 
+            // Save a single product via PUT /api/products/:id
+            const saveProduct = async (product) => {
+                try {
+                    const res = await fetch(`/api/products/${encodeURIComponent(product.id)}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-admin-password': adminPwd
+                        },
+                        body: JSON.stringify(product)
+                    }).then(handle401);
+                    const data = await res.json();
+                    if (data.success) {
+                        showToast('✅ Товар збережено!');
+                    } else {
+                        showToast('❌ Помилка: ' + (data.error || 'Невідома помилка'), 'error');
+                    }
+                    return data.success;
+                } catch (e) {
+                    showToast('❌ Помилка з\'єднання: ' + e.message, 'error');
+                    return false;
+                }
+            };
+
+            // Delete a single product via DELETE /api/products/:id
+            const deleteProduct = async (productId) => {
+                try {
+                    const res = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+                        method: 'DELETE',
+                        headers: { 'x-admin-password': adminPwd }
+                    }).then(handle401);
+                    const data = await res.json();
+                    return data.success;
+                } catch (e) {
+                    return false;
+                }
+            };
+
             const autoSaveFile = async () => {
                 const saveBtn = document.querySelector('button[type="submit"]');
                 const originalBtnText = saveBtn ? saveBtn.innerHTML : 'ЗБЕРЕГТИ';
@@ -936,6 +999,7 @@
                         document.getElementById('server-status-card').style.borderColor = data.source === 'supabase' ? '#86efac' : '#fdba74';
 
                         renderTable(false);
+                        refreshCategoryLists();
                     }
                 } catch (e) {
                     document.getElementById('server-status-text').textContent = '❌ Сервер не знайдено! Перевірте деплой на Vercel.';
@@ -953,13 +1017,14 @@
 
                 tableBody.innerHTML = '';
                 if (filtered.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding: 30px;">${query ? 'Нічого не знайдено за вашим запитом' : 'Немає товарів. Створіть перший!'}</td></tr>`;
+                    tableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding: 30px;">${query ? 'Нічого не знайдено за вашим запитом' : 'Немає товарів. Створіть перший!'}</td></tr>`;
                 } else {
                     filtered.forEach((p) => {
                         const originalIdx = window.tempProducts.indexOf(p);
                         const isHidden = p.hidden === true;
                         tableBody.innerHTML += `
                         <tr data-id="${p.id}" style="${isHidden ? 'opacity: 0.5;' : ''}">
+                            <td style="width:30px;"><input type="checkbox" class="row-cb" data-idx="${originalIdx}" style="cursor:pointer; width:16px; height:16px;"></td>
                             <td class="drag-handle-table"><span class="iconify" data-icon="material-symbols:drag-indicator" style="font-size:18px;"></span></td>
                             <td style="font-weight: 500;">
                                 ${p.title}
@@ -988,6 +1053,16 @@
                     });
                 }
                 if (triggerSave) autoSaveFile();
+            };
+
+            // Refresh category/subcategory datalists from current product list
+            const refreshCategoryLists = () => {
+                const cats = [...new Set(window.tempProducts.map(p => p.category).filter(Boolean))].sort();
+                const subcats = [...new Set(window.tempProducts.map(p => p.subcategory).filter(Boolean))].sort();
+                const catList = document.getElementById('cat-list');
+                const subcatList = document.getElementById('subcat-list');
+                if (catList) catList.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+                if (subcatList) subcatList.innerHTML = subcats.map(c => `<option value="${c}">`).join('');
             };
 
             // Live Search Handler
@@ -1102,8 +1177,10 @@
                 if (toggleVisBtn) {
                     const idx = parseInt(toggleVisBtn.getAttribute('data-idx'));
                     window.tempProducts[idx].hidden = !window.tempProducts[idx].hidden;
-                    renderTable(true);
-                    showToast(window.tempProducts[idx].hidden ? '🌑 Товар приховано з сайту' : '☀️ Товар тепер видно на сайті');
+                    renderTable(false);
+                    const p = window.tempProducts[idx];
+                    showToast(p.hidden ? '🌑 Товар приховано з сайту' : '☀️ Товар тепер видно на сайті');
+                    await saveProduct(p);
                 }
 
                 const copyBtn = e.target.closest('.btn-copy');
@@ -1125,7 +1202,7 @@
                     document.getElementById('p-price').value = p.price;
                     document.getElementById('p-oldprice').value = p.oldPrice || '';
                     document.getElementById('p-badge').value = p.badgeText || '';
-                    document.getElementById('p-avail').value = p.availability || '';
+                    setAvailability(p.availability);
                     document.getElementById('p-desc').value = p.description || '';
                     
                     colorsContainer.innerHTML = '';
@@ -1162,7 +1239,7 @@
                     document.getElementById('p-price').value = p.price;
                     document.getElementById('p-oldprice').value = p.oldPrice || '';
                     document.getElementById('p-badge').value = p.badgeText || '';
-                    document.getElementById('p-avail').value = p.availability || '';
+                    setAvailability(p.availability);
                     document.getElementById('p-desc').value = p.description || '';
                     colorsContainer.innerHTML = '';
                     if (p.colors) p.colors.forEach(c => colorsContainer.appendChild(createColorRow(c.name, c.image, c.available)));
@@ -1181,13 +1258,42 @@
 
                 const delBtn = e.target.closest('.btn-delete');
                 if (delBtn && confirm('Видалити цей товар?')) {
-                    window.tempProducts.splice(parseInt(delBtn.getAttribute('data-idx')), 1);
-                    renderTable(true);
+                    const idx = parseInt(delBtn.getAttribute('data-idx'));
+                    const productId = window.tempProducts[idx].id;
+                    window.tempProducts.splice(idx, 1);
+                    renderTable(false);
+                    await deleteProduct(productId);
+                    showToast('🗑️ Товар видалено');
                 }
             });
 
+            // Wire availability toggle
+            const availToggle = document.getElementById('p-avail-toggle');
+            const availLabel = document.getElementById('p-avail-label');
+            const availHidden = document.getElementById('p-avail');
+            availToggle.addEventListener('change', () => {
+                if (availToggle.checked) {
+                    availLabel.textContent = 'В наявності';
+                    availHidden.value = 'В наявності';
+                    availLabel.style.color = '#10b981';
+                } else {
+                    availLabel.textContent = 'Немає в наявності';
+                    availHidden.value = 'Немає в наявності';
+                    availLabel.style.color = '#ef4444';
+                }
+            });
+
+            const setAvailability = (val) => {
+                const inStock = !val || val === 'В наявності' || val === 'true' || val === true;
+                availToggle.checked = inStock;
+                availLabel.textContent = inStock ? 'В наявності' : 'Немає в наявності';
+                availLabel.style.color = inStock ? '#10b981' : '#ef4444';
+                availHidden.value = inStock ? 'В наявності' : 'Немає в наявності';
+            };
+
             document.getElementById('btn-add-new').addEventListener('click', () => {
                 productForm.reset();
+                setAvailability('В наявності');
                 document.getElementById('editing-idx').value = '-1';
                 document.getElementById('form-title').innerHTML = 'Створити новий товар';
                 specsContainer.innerHTML = '';
@@ -1265,9 +1371,11 @@
                         });
                     }
 
-                    if (newProducts.length > 0) {
+                if (newProducts.length > 0) {
                         window.tempProducts = [...window.tempProducts, ...newProducts];
-                        renderTable(true);
+                        renderTable(false);
+                        refreshCategoryLists();
+                        autoSaveFile();
                         showToast(`✅ Успішно імпортовано ${newProducts.length} товарів!`);
                     } else {
                         showToast('❌ Не вдалось знайти дані для імпорту', 'error');
@@ -1303,7 +1411,7 @@
                 document.body.removeChild(link);
             };
 
-            productForm.addEventListener('submit', (e) => {
+            productForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const idx = parseInt(document.getElementById('editing-idx').value);
                 const specs = [];
@@ -1337,8 +1445,11 @@
                 if (idx === -1) window.tempProducts.push(obj);
                 else window.tempProducts[idx] = obj;
                 formCard.style.display = 'none';
-                renderTable(true);
+                renderTable(false);
+                refreshCategoryLists();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                // Save only the changed product + update sortOrder for all
+                await saveProduct({ ...obj, sortOrder: window.tempProducts.indexOf(obj) });
             });
 
             const handleXmlImport = async () => {
@@ -1434,7 +1545,9 @@
 
                     if (newProducts.length > 0) {
                         window.tempProducts = [...window.tempProducts, ...newProducts];
-                        renderTable(true);
+                        renderTable(false);
+                        refreshCategoryLists();
+                        autoSaveFile();
                         showToast(`✅ Успішно імпортовано ${newProducts.length} товарів!`);
                         document.getElementById('xml-feed-url').value = '';
                     } else {
@@ -1452,6 +1565,80 @@
             document.getElementById('btn-xml-import').addEventListener('click', handleXmlImport);
 
             renderTable(false);
+            refreshCategoryLists();
+
+            // --- Bulk Actions Logic ---
+            const bulkBar = document.getElementById('bulk-actions-bar');
+            const bulkCountLabel = document.getElementById('bulk-count-label');
+            const selectAllCb = document.getElementById('select-all-cb');
+
+            const getSelectedIdxs = () =>
+                Array.from(tableBody.querySelectorAll('.row-cb:checked')).map(cb => parseInt(cb.getAttribute('data-idx')));
+
+            const updateBulkBar = () => {
+                const selected = getSelectedIdxs();
+                if (selected.length > 0) {
+                    bulkBar.style.display = 'flex';
+                    bulkCountLabel.textContent = `${selected.length} товар(ів) вибрано`;
+                } else {
+                    bulkBar.style.display = 'none';
+                }
+            };
+
+            tableBody.addEventListener('change', (e) => {
+                if (e.target.classList.contains('row-cb')) updateBulkBar();
+            });
+
+            selectAllCb.addEventListener('change', () => {
+                tableBody.querySelectorAll('.row-cb').forEach(cb => { cb.checked = selectAllCb.checked; });
+                updateBulkBar();
+            });
+
+            document.getElementById('bulk-cancel').addEventListener('click', () => {
+                tableBody.querySelectorAll('.row-cb').forEach(cb => { cb.checked = false; });
+                selectAllCb.checked = false;
+                bulkBar.style.display = 'none';
+            });
+
+            document.getElementById('bulk-show').addEventListener('click', async () => {
+                const idxs = getSelectedIdxs();
+                const promises = idxs.map(idx => {
+                    window.tempProducts[idx].hidden = false;
+                    return saveProduct(window.tempProducts[idx]);
+                });
+                await Promise.all(promises);
+                renderTable(false);
+                bulkBar.style.display = 'none';
+                selectAllCb.checked = false;
+                showToast(`☀️ ${idxs.length} товар(ів) показано на сайті`);
+            });
+
+            document.getElementById('bulk-hide').addEventListener('click', async () => {
+                const idxs = getSelectedIdxs();
+                const promises = idxs.map(idx => {
+                    window.tempProducts[idx].hidden = true;
+                    return saveProduct(window.tempProducts[idx]);
+                });
+                await Promise.all(promises);
+                renderTable(false);
+                bulkBar.style.display = 'none';
+                selectAllCb.checked = false;
+                showToast(`🌑 ${idxs.length} товар(ів) приховано з сайту`);
+            });
+
+            document.getElementById('bulk-delete').addEventListener('click', async () => {
+                const idxs = getSelectedIdxs();
+                if (!confirm(`Видалити ${idxs.length} товар(ів)?`)) return;
+                const ids = idxs.map(idx => window.tempProducts[idx].id);
+                // Remove from local array (in reverse order to preserve indexes)
+                idxs.sort((a, b) => b - a).forEach(idx => window.tempProducts.splice(idx, 1));
+                await Promise.all(ids.map(id => deleteProduct(id)));
+                renderTable(false);
+                refreshCategoryLists();
+                bulkBar.style.display = 'none';
+                selectAllCb.checked = false;
+                showToast(`🗑️ ${ids.length} товар(ів) видалено`);
+            });
 
             // --- 0. Initialization & UI Helpers ---
             if (typeof Sortable !== 'undefined') {
@@ -1484,7 +1671,8 @@
                             if (!newIds.includes(p.id)) reordered.push(p);
                         });
                         window.tempProducts = reordered;
-                        renderTable(true);
+                        renderTable(false);
+                        autoSaveFile();
                     }
 
                 });
