@@ -96,7 +96,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 40px;
-    margin-bottom: 30px;
+    margin-bottom: 15px;
     align-items: start;
     max-width: 100%;
     min-width: 0;
