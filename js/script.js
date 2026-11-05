@@ -405,7 +405,15 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('dyn-sku').textContent = 'Артикул: ' + (product.sku || '');
         document.getElementById('dyn-price').textContent = product.price + ' грн.';
         document.getElementById('dyn-old-price').textContent = product.oldPrice ? (product.oldPrice + ' грн.') : '';
-        document.getElementById('dyn-desc').innerText = product.description.replace(/\\n/g, '\n') || '';
+        const descEl = document.getElementById('dyn-desc');
+        if (descEl) {
+            const descText = (product.description || '').replace(/\\n/g, '\n').trim();
+            descEl.innerText = descText;
+            const descCol = descEl.closest('.product-desc-col');
+            if (descCol) {
+                descCol.style.display = descText ? 'block' : 'none';
+            }
+        }
 
         const updateAvailabilityUI = (isAvailable) => {
             const availEl = document.getElementById('dyn-avail');

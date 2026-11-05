@@ -177,27 +177,83 @@
 .m-product-desc {
     font-size: 14px;
     color: #4b5563;
-    line-height: 1.5;
+    line-height: 1.6;
     margin-bottom: 20px;
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: break-word;
 }
 
+/* Product Details Split (Description & Characteristics 50/50) */
+.product-details-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    align-items: start;
+    margin-top: 25px;
+    padding-top: 22px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.product-desc-col,
+.product-specs-col {
+    min-width: 0;
+}
+
+.product-details-split:has(.m-specs[style*="display: none"]) {
+    grid-template-columns: 1fr;
+}
+
+.product-details-split:has(.m-specs[style*="display: none"]) .product-specs-col {
+    display: none;
+}
+
+.product-details-split:has(.product-desc-col[style*="display: none"]) {
+    grid-template-columns: 1fr;
+}
+
+.product-details-subtitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e2e8f0;
+    letter-spacing: -0.01em;
+}
+
+.product-details-subtitle .iconify {
+    font-size: 20px;
+    color: var(--accent-blue, #2563eb);
+    flex-shrink: 0;
+}
+
+.product-desc-col .m-product-desc {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.6;
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
 .m-specs {
-    margin-top: 30px;
-    margin-bottom: 30px;
+    margin-top: 0;
+    margin-bottom: 0;
 }
 
 .m-spec-row {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
-    flex-wrap: wrap;
-    gap: 4px;
-    padding: 12px 0;
+    gap: 12px;
+    padding: 6px 0;
     border-bottom: 1px solid #f1f5f9;
-    font-size: 15px;
+    font-size: 13.5px;
+    line-height: 1.35;
 }
 
 .m-spec-row:last-child {
@@ -205,19 +261,30 @@
 }
 
 .m-spec-label {
-    color: #1e293b;
+    color: #64748b;
     font-weight: 400;
+    font-size: 13.5px;
 }
 
 .m-spec-value {
-    color: #1e293b;
+    color: #0f172a;
     font-weight: 500;
+    font-size: 13.5px;
     text-align: right;
     word-break: break-word;
     overflow-wrap: break-word;
     max-width: 60%;
     flex-shrink: 1;
     min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .product-details-split {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-top: 20px;
+        padding-top: 16px;
+    }
 }
 
 .m-actions {
