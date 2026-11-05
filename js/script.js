@@ -964,40 +964,63 @@ document.addEventListener('DOMContentLoaded', () => {
             const deliverySection = document.getElementById('checkout-delivery-section');
             const deliveryOptionsContainer = document.getElementById('checkout-delivery-options');
             if (deliverySection && deliveryOptionsContainer) {
-                // Merge delivery flags from all cart items
-                const merged = { np: false, np_cargo: false, np_courier: false, ukrpost: false };
-                cart.forEach(item => {
-                    const d = item.delivery || {};
-                    if (d.np) merged.np = true;
-                    if (d.np_cargo) merged.np_cargo = true;
-                    if (d.np_courier) merged.np_courier = true;
-                    if (d.ukrpost) merged.ukrpost = true;
+                const getProductDelivery = (item) => {
+                    if (item.delivery) return item.delivery;
+                    if (typeof productsData !== 'undefined' && Array.isArray(productsData)) {
+                        const found = productsData.find(p => p.title === item.title || p.id === item.id);
+                        if (found && found.delivery) return found.delivery;
+                    }
+                    return null;
+                };
+
+                // Check if any product in the cart requires cargo branch
+                const isCargo = cart.some(item => {
+                    const d = getProductDelivery(item);
+                    if (!d) return false;
+                    return d.cargo_only === true || d.np_cargo === true;
                 });
 
-                const options = [
-                    { key: 'np',         label: '📦 Нова Пошта — Відділення', visible: merged.np },
-                    { key: 'np_cargo',   label: '🏭 Нова Пошта — Вантажне відділення', visible: merged.np_cargo },
-                    { key: 'np_courier', label: '🚗 Нова Пошта — Курʼєрська доставка', visible: merged.np_courier },
-                    { key: 'ukrpost',    label: '🇺🇦 Укрпошта — Відділення', visible: merged.ukrpost },
-                ];
+                // Check if courier is available (default enabled)
+                const hasCourier = cart.every(item => {
+                    const d = getProductDelivery(item);
+                    if (!d) return true;
+                    return d.np_courier !== false;
+                });
 
-                const availableOptions = options.filter(o => o.visible);
+                // Ukrposhta is shown ONLY if enabled for all products in cart
+                const hasUkrpost = cart.length > 0 && cart.every(item => {
+                    const d = getProductDelivery(item);
+                    return d && d.ukrpost === true;
+                });
 
-                if (availableOptions.length > 0) {
-                    deliverySection.style.display = 'block';
-                    deliveryOptionsContainer.innerHTML = availableOptions.map((opt, idx) => `
-                        <label style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; font-weight:500; font-size:14px; transition: border-color 0.2s;">
-                            <input type="radio" name="delivery_type" value="${opt.key}" ${idx === 0 ? 'checked' : ''} style="accent-color:var(--accent-blue,#2563eb); width:16px; height:16px;">
-                            ${opt.label}
-                        </label>
-                    `).join('');
-                    // Show fields for first option by default
-                    showDeliveryFields(availableOptions[0].key);
+                const options = [];
+
+                // 1. Nova Poshta branch (either Cargo or Standard - never both!)
+                if (isCargo) {
+                    options.push({ key: 'np_cargo', label: '🏭 Нова Пошта — Вантажне відділення' });
                 } else {
-                    deliverySection.style.display = 'none';
-                    deliveryOptionsContainer.innerHTML = '';
-                    showDeliveryFields(null);
+                    options.push({ key: 'np', label: '📦 Нова Пошта' });
                 }
+
+                // 2. Nova Poshta Courier
+                if (hasCourier) {
+                    options.push({ key: 'np_courier', label: '🚗 Нова Пошта — Курʼєрська доставка' });
+                }
+
+                // 3. Ukrposhta (only if product supports it)
+                if (hasUkrpost) {
+                    options.push({ key: 'ukrpost', label: '🇺🇦 Укрпошта' });
+                }
+
+                deliverySection.style.display = 'block';
+                deliveryOptionsContainer.innerHTML = options.map((opt, idx) => `
+                    <label style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; font-weight:500; font-size:14px; transition: border-color 0.2s;">
+                        <input type="radio" name="delivery_type" value="${opt.key}" ${idx === 0 ? 'checked' : ''} style="accent-color:var(--accent-blue,#2563eb); width:16px; height:16px;">
+                        ${opt.label}
+                    </label>
+                `).join('');
+
+                showDeliveryFields(options[0].key);
             }
 
             checkoutModal.classList.add('active');
@@ -1025,10 +1048,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(checkoutForm);
             const deliveryType = formData.get('delivery_type') || null;
             const deliveryLabels = {
-                np:         'Нова Пошта — Відділення',
-                np_cargo:   'Нова Пошта — Вантажне відділення',
-                np_courier: 'Нова Пошта — Курʼєрська доставка',
-                ukrpost:    'Укрпошта — Відділення'
+                np:         'Нова Пошта (відділення)',
+                np_cargo:   'Нова Пошта (вантажне відділення)',
+                np_courier: 'Нова Пошта (курʼєрська доставка)',
+                ukrpost:    'Укрпошта (відділення)'
             };
 
             const orderData = {
