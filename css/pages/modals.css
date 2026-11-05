@@ -712,7 +712,7 @@ body.modal-open {
 }
 
 .checkout-container {
-    max-width: 500px;
+    max-width: 540px;
 }
 
 .checkout-form-wrapper h3 {
@@ -778,6 +778,71 @@ body.modal-open {
 .checkout-submit-btn {
     width: 100%;
     margin-top: 10px;
+}
+
+/* --- Checkout Delivery Section --- */
+#checkout-delivery-section {
+    margin-bottom: 0;
+}
+
+#checkout-delivery-section > label {
+    font-weight: 700;
+    font-size: 14px;
+    color: #334155;
+    display: block;
+    margin-bottom: 10px;
+}
+
+#checkout-delivery-options label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 14px;
+    color: #334155;
+    transition: border-color 0.2s, background 0.2s;
+    background: #fff;
+}
+
+#checkout-delivery-options label:hover {
+    border-color: var(--accent-blue, #2563eb);
+    background: #f0f6ff;
+}
+
+#checkout-delivery-options input[type="radio"]:checked + * {
+    color: var(--accent-blue, #2563eb);
+}
+
+#checkout-delivery-options label:has(input:checked) {
+    border-color: var(--accent-blue, #2563eb);
+    background: #eff6ff;
+}
+
+.checkout-delivery-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #334155;
+}
+
+.checkout-delivery-field input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: border-color 0.2s;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.checkout-delivery-field input:focus {
+    border-color: var(--accent-blue, #2563eb);
 }
 
 /* --- Success Modal Styles --- */

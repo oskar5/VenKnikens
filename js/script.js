@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (prod.colors && prod.colors.length > 0) mainImg = prod.colors[0].image;
 
                 html += `
-                    <div class="product-card" data-id="${prod.id}">
+                    <div class="product-card" data-id="${prod.id}" data-delivery='${JSON.stringify(prod.delivery || {})}'>
                         <div class="product-img-wrapper" onclick="window.location.href='product.html?id=${encodeURIComponent(prod.id)}'">
                             ${prod.badgeText ? '<span class="sale-badge">' + prod.badgeText + '</span>' : ''}
                             <img src="${mainImg}" alt="${prod.title}" class="product-img" loading="lazy">
@@ -363,6 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (notFound) notFound.style.display = 'none';
         container.style.display = 'block';
         document.title = `${product.title} | VenKnikens`;
+        // Store delivery info globally so addToCart can pick it up
+        window.__currentProductDelivery = product.delivery || null;
 
         // Dynamic canonical for SEO — each product gets its own URL
         const canonicalUrl = `https://venknikens.vercel.app/product.html?id=${encodeURIComponent(product.id)}`;
@@ -631,7 +633,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const image = document.getElementById('main-product-img')?.src || '';
                     const qtyInput = document.querySelector('.qty-input');
                     const qty = qtyInput ? parseInt(qtyInput.value) : 1;
-                    window.addToCart({ title, price, image, qty });
+                    // Grab delivery info from data attribute set by initDynamicProductPage
+                    const delivery = window.__currentProductDelivery || null;
+                    window.addToCart({ title, price, image, qty, delivery });
                 }
             }
 
@@ -860,8 +864,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const priceElem = card.querySelector('.current-price');
                 const price = priceElem ? priceElem.textContent : '0 грн.';
                 const image = card.querySelector('.product-img').src;
+                let delivery = null;
+                try { delivery = JSON.parse(card.getAttribute('data-delivery') || 'null'); } catch(e) {}
                 
-                cart.push({ title, price, image, qty: 1 });
+                cart.push({ title, price, image, qty: 1, delivery });
                 saveCart();
                 toggleCart(true);
             }
@@ -891,6 +897,46 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!checkoutModal) return;
 
+        // Delivery type radio selection handler
+        const deliveryFields = {
+            'np':         ['checkout-city-group', 'checkout-np-branch-group'],
+            'np_cargo':   ['checkout-city-group', 'checkout-np-cargo-group'],
+            'np_courier': ['checkout-city-group', 'checkout-np-courier-group'],
+            'ukrpost':    ['checkout-city-group', 'checkout-ukrpost-group'],
+        };
+
+        const showDeliveryFields = (type) => {
+            // Hide all delivery field groups
+            ['checkout-city-group','checkout-np-branch-group','checkout-np-cargo-group',
+             'checkout-np-courier-group','checkout-ukrpost-group'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'none';
+                    el.querySelectorAll('input').forEach(i => i.required = false);
+                }
+            });
+            if (!type) return;
+            const groups = deliveryFields[type] || [];
+            groups.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.display = 'block';
+                    // Make non-city inputs required
+                    if (id !== 'checkout-city-group') {
+                        el.querySelectorAll('input').forEach(i => i.required = true);
+                    } else {
+                        el.querySelectorAll('input').forEach(i => i.required = true);
+                    }
+                }
+            });
+        };
+
+        checkoutModal.addEventListener('change', (e) => {
+            if (e.target.name === 'delivery_type') {
+                showDeliveryFields(e.target.value);
+            }
+        });
+
         window.openCheckoutModal = () => {
             const cart = window.getCart ? window.getCart() : [];
             let html = '';
@@ -913,6 +959,47 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>`;
             
             if (summaryList) summaryList.innerHTML = html;
+
+            // --- Build delivery options from cart items ---
+            const deliverySection = document.getElementById('checkout-delivery-section');
+            const deliveryOptionsContainer = document.getElementById('checkout-delivery-options');
+            if (deliverySection && deliveryOptionsContainer) {
+                // Merge delivery flags from all cart items
+                const merged = { np: false, np_cargo: false, np_courier: false, ukrpost: false };
+                cart.forEach(item => {
+                    const d = item.delivery || {};
+                    if (d.np) merged.np = true;
+                    if (d.np_cargo) merged.np_cargo = true;
+                    if (d.np_courier) merged.np_courier = true;
+                    if (d.ukrpost) merged.ukrpost = true;
+                });
+
+                const options = [
+                    { key: 'np',         label: '📦 Нова Пошта — Відділення', visible: merged.np },
+                    { key: 'np_cargo',   label: '🏭 Нова Пошта — Вантажне відділення', visible: merged.np_cargo },
+                    { key: 'np_courier', label: '🚗 Нова Пошта — Курʼєрська доставка', visible: merged.np_courier },
+                    { key: 'ukrpost',    label: '🇺🇦 Укрпошта — Відділення', visible: merged.ukrpost },
+                ];
+
+                const availableOptions = options.filter(o => o.visible);
+
+                if (availableOptions.length > 0) {
+                    deliverySection.style.display = 'block';
+                    deliveryOptionsContainer.innerHTML = availableOptions.map((opt, idx) => `
+                        <label style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; font-weight:500; font-size:14px; transition: border-color 0.2s;">
+                            <input type="radio" name="delivery_type" value="${opt.key}" ${idx === 0 ? 'checked' : ''} style="accent-color:var(--accent-blue,#2563eb); width:16px; height:16px;">
+                            ${opt.label}
+                        </label>
+                    `).join('');
+                    // Show fields for first option by default
+                    showDeliveryFields(availableOptions[0].key);
+                } else {
+                    deliverySection.style.display = 'none';
+                    deliveryOptionsContainer.innerHTML = '';
+                    showDeliveryFields(null);
+                }
+            }
+
             checkoutModal.classList.add('active');
             document.body.style.overflow = 'hidden';
         };
@@ -936,9 +1023,24 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'ВІДПРАВЛЯЄМО...';
 
             const formData = new FormData(checkoutForm);
+            const deliveryType = formData.get('delivery_type') || null;
+            const deliveryLabels = {
+                np:         'Нова Пошта — Відділення',
+                np_cargo:   'Нова Пошта — Вантажне відділення',
+                np_courier: 'Нова Пошта — Курʼєрська доставка',
+                ukrpost:    'Укрпошта — Відділення'
+            };
+
             const orderData = {
                 name: formData.get('name'),
                 phone: formData.get('phone'),
+                delivery: deliveryType ? {
+                    type: deliveryType,
+                    label: deliveryLabels[deliveryType] || deliveryType,
+                    city: formData.get('city') || '',
+                    branch: formData.get('np_branch') || formData.get('np_cargo_branch') || formData.get('ukrpost_branch') || '',
+                    courier_address: formData.get('np_courier_address') || ''
+                } : null,
                 items: window.getCart(),
                 total: document.querySelector('.cart-total span:last-child')?.textContent || '0 грн.'
             };
@@ -956,6 +1058,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.clearCart();
                     closeCheckoutModal();
                     checkoutForm.reset();
+                    showDeliveryFields(null);
                 } else {
                     alert('Помилка при оформленні: ' + res.error);
                 }
