@@ -973,12 +973,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     return null;
                 };
 
-                // Check if any product in the cart requires cargo branch
-                const isCargo = cart.some(item => {
-                    const d = getProductDelivery(item);
+                // Check if an item is ONLY cargo (cargo enabled, standard disabled)
+                const isOnlyCargo = (d) => {
                     if (!d) return false;
-                    return d.cargo_only === true || d.np_cargo === true;
-                });
+                    // If cargo is on, but standard is OFF -> only cargo!
+                    if (d.np_cargo === true && !d.np) return true;
+                    if (d.cargo_only === true) return true;
+                    return false;
+                };
+
+                // If ANY item in cart requires ONLY cargo branch
+                const hasOnlyCargoItem = cart.some(item => isOnlyCargo(getProductDelivery(item)));
 
                 // Check if courier is available (default enabled)
                 const hasCourier = cart.every(item => {
@@ -987,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return d.np_courier !== false;
                 });
 
-                // Ukrposhta is shown ONLY if enabled for all products in cart
+                // Ukrposhta is shown ONLY if enabled for this product
                 const hasUkrpost = cart.length > 0 && cart.every(item => {
                     const d = getProductDelivery(item);
                     return d && d.ukrpost === true;
@@ -995,14 +1000,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const options = [];
 
-                // 1. Nova Poshta branch (either Cargo or Standard - never both!)
-                if (isCargo) {
-                    options.push({ key: 'np_cargo', label: '🏭 Нова Пошта — Вантажне відділення' });
+                // 1. Nova Poshta branch:
+                // Якщо товар відмічено Стандартне відділення або Стандартне+Грузове -> показувати загальне «📦 Нова Пошта».
+                // Якщо ТІЛЬКИ грузове (стандартне вимкнено) -> показувати «🏭 Нова Пошта — тільки вантажні відділення».
+                if (hasOnlyCargoItem) {
+                    options.push({ key: 'np_cargo', label: '🏭 Нова Пошта — тільки вантажні відділення' });
                 } else {
                     options.push({ key: 'np', label: '📦 Нова Пошта' });
                 }
 
-                // 2. Nova Poshta Courier
+                // 2. Courier
                 if (hasCourier) {
                     options.push({ key: 'np_courier', label: '🚗 Нова Пошта — Курʼєрська доставка' });
                 }
@@ -1049,7 +1056,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const deliveryType = formData.get('delivery_type') || null;
             const deliveryLabels = {
                 np:         'Нова Пошта (відділення)',
-                np_cargo:   'Нова Пошта (вантажне відділення)',
+                np_cargo:   'Нова Пошта (тільки вантажні відділення)',
                 np_courier: 'Нова Пошта (курʼєрська доставка)',
                 ukrpost:    'Укрпошта (відділення)'
             };

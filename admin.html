@@ -736,45 +736,59 @@
                 <div class="form-group" style="border:1px solid var(--border); border-radius:10px; padding:18px; background:var(--table-head-bg);">
                     <label style="font-size:16px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
                         <span class="iconify" data-icon="material-symbols:local-shipping-outline" style="font-size:20px;"></span>
-                        Способи доставки товару
+                        Способи доставки
                     </label>
-                    <div class="hint" style="margin-bottom:16px;">Налаштування варіантів доставки, які будуть доступні покупцю при оформленні замовлення.</div>
+                    <div class="hint" style="margin-bottom:16px;">
+                        Оберіть доступні способи доставки. <b>Нова Пошта:</b> якщо відмічено Стандартне або обидва — показується загальне <i>«📦 Нова Пошта»</i>; якщо відмічено <b>тільки Вантажне</b> — показується <i>«🏭 Нова Пошта — тільки вантажні відділення»</i>.
+                    </div>
 
                     <div style="display:flex; flex-direction:column; gap:12px;">
 
-                        <!-- Nova Poshta Cargo Only -->
-                        <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
+                        <!-- Nova Poshta Standard -->
+                        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
+                            <label class="switch" style="margin:0; flex-shrink:0;">
+                                <input type="checkbox" id="p-delivery-np" name="delivery_np">
+                                <span class="slider"></span>
+                            </label>
+                            <div>
+                                <div style="font-weight:600; font-size:14px;">📦 Нова Пошта — Відділення (стандартне)</div>
+                                <div style="font-size:12px; color:var(--text-muted);">Звичайні відділення НП</div>
+                            </div>
+                        </div>
+
+                        <!-- Nova Poshta Cargo -->
+                        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
                             <label class="switch" style="margin:0; flex-shrink:0;">
                                 <input type="checkbox" id="p-delivery-np-cargo" name="delivery_np_cargo">
                                 <span class="slider"></span>
                             </label>
                             <div>
-                                <div style="font-weight:600; font-size:14px;">🏭 Тільки вантажні відділення Нової Пошти</div>
-                                <div style="font-size:12px; color:var(--text-muted);">Увімкніть для великогабаритних товарів (>30 кг або довжина >120 см). При замовленні клієнт побачить вибір «Вантажне відділення» замість звичайного.</div>
+                                <div style="font-weight:600; font-size:14px;">🏭 Нова Пошта — Вантажне відділення</div>
+                                <div style="font-size:12px; color:var(--text-muted);">Тільки вантажні відділення НП (для великогабаритних товарів)</div>
                             </div>
                         </div>
 
                         <!-- Nova Poshta Courier -->
-                        <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
                             <label class="switch" style="margin:0; flex-shrink:0;">
-                                <input type="checkbox" id="p-delivery-np-courier" name="delivery_np_courier" checked>
+                                <input type="checkbox" id="p-delivery-np-courier" name="delivery_np_courier">
                                 <span class="slider"></span>
                             </label>
                             <div>
                                 <div style="font-weight:600; font-size:14px;">🚗 Нова Пошта — Курʼєрська доставка</div>
-                                <div style="font-size:12px; color:var(--text-muted);">Доставка курʼєром Нової Пошти до дверей покупця.</div>
+                                <div style="font-size:12px; color:var(--text-muted);">Доставка курʼєром НП до дверей</div>
                             </div>
                         </div>
 
                         <!-- Ukrposhta -->
-                        <div style="display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
+                        <div style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:var(--card-bg); border-radius:8px; border:1px solid var(--border);">
                             <label class="switch" style="margin:0; flex-shrink:0;">
                                 <input type="checkbox" id="p-delivery-ukrpost" name="delivery_ukrpost">
                                 <span class="slider"></span>
                             </label>
                             <div>
-                                <div style="font-weight:600; font-size:14px;">🇺🇦 Доставка Укрпоштою</div>
-                                <div style="font-size:12px; color:var(--text-muted);">Увімкніть, якщо цей товар відправляється Укрпоштою (якщо вимкнено — опція Укрпошти не зʼявиться при замовленні).</div>
+                                <div style="font-weight:600; font-size:14px;">🇺🇦 Укрпошта — Відділення</div>
+                                <div style="font-size:12px; color:var(--text-muted);">Доставка через відділення Укрпошти</div>
                             </div>
                         </div>
 
@@ -1266,8 +1280,9 @@
                     }
                     // Restore delivery options
                     const d1 = p.delivery || {};
-                    document.getElementById('p-delivery-np-cargo').checked = !!(d1.cargo_only || d1.np_cargo);
-                    document.getElementById('p-delivery-np-courier').checked = d1.np_courier !== false;
+                    document.getElementById('p-delivery-np').checked = !!d1.np;
+                    document.getElementById('p-delivery-np-cargo').checked = !!d1.np_cargo;
+                    document.getElementById('p-delivery-np-courier').checked = !!d1.np_courier;
                     document.getElementById('p-delivery-ukrpost').checked = !!d1.ukrpost;
                     
                     formCard.style.display = 'block';
@@ -1306,8 +1321,9 @@
                     }
                     // Restore delivery options
                     const d2 = p.delivery || {};
-                    document.getElementById('p-delivery-np-cargo').checked = !!(d2.cargo_only || d2.np_cargo);
-                    document.getElementById('p-delivery-np-courier').checked = d2.np_courier !== false;
+                    document.getElementById('p-delivery-np').checked = !!d2.np;
+                    document.getElementById('p-delivery-np-cargo').checked = !!d2.np_cargo;
+                    document.getElementById('p-delivery-np-courier').checked = !!d2.np_courier;
                     document.getElementById('p-delivery-ukrpost').checked = !!d2.ukrpost;
                     formCard.style.display = 'block';
                     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1358,8 +1374,9 @@
                 colorsContainer.innerHTML = '';
                 colorsContainer.appendChild(createColorRow('Стандарт', ''));
                 ['Висота', 'Ширина', 'Матеріал'].forEach(s => specsContainer.appendChild(createSpecRow(s, '')));
-                // Reset delivery checkboxes
-                document.getElementById('p-delivery-np-cargo').checked = false;
+                // Reset delivery checkboxes (default: Nova Poshta standard+cargo+courier enabled, Ukrposhta disabled)
+                document.getElementById('p-delivery-np').checked = true;
+                document.getElementById('p-delivery-np-cargo').checked = true;
                 document.getElementById('p-delivery-np-courier').checked = true;
                 document.getElementById('p-delivery-ukrpost').checked = false;
                 formCard.style.display = 'block';
@@ -1504,7 +1521,7 @@
                     description: document.getElementById('p-desc').value.trim(),
                     colors, images, specs,
                     delivery: {
-                        cargo_only: document.getElementById('p-delivery-np-cargo').checked,
+                        np: document.getElementById('p-delivery-np').checked,
                         np_cargo: document.getElementById('p-delivery-np-cargo').checked,
                         np_courier: document.getElementById('p-delivery-np-courier').checked,
                         ukrpost: document.getElementById('p-delivery-ukrpost').checked

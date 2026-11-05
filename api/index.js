@@ -258,19 +258,11 @@ const TG_CHAT_ID = process.env.TG_CHAT_ID;
 
 app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
     try {
-        const { name, phone, items, total, delivery } = req.body;
+        const { name, phone, items, total } = req.body;
 
         let message = `📦 *НОВЕ ЗАМОВЛЕННЯ!*\n\n`;
         message += `👤 *Клієнт:* ${name}\n`;
         message += `📞 *Телефон:* ${phone}\n`;
-
-        if (delivery) {
-            message += `🚚 *Спосіб доставки:* ${delivery.label || delivery.type}\n`;
-            if (delivery.city) message += `📍 *Населений пункт:* ${delivery.city}\n`;
-            if (delivery.branch) message += `🏢 *Відділення:* ${delivery.branch}\n`;
-            if (delivery.courier_address) message += `🏠 *Адреса доставки:* ${delivery.courier_address}\n`;
-        }
-
         message += `\n🛒 *Товари:*\n`;
 
         items.forEach((item, idx) => {
