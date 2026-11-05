@@ -1015,6 +1015,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
 
+        // --- Smart Autocomplete Placement Helper ---
+        const updateDropdownPlacement = (input, dropdown) => {
+            if (!input || !dropdown) return;
+            const inputRect = input.getBoundingClientRect();
+            const modal = document.querySelector('.checkout-container') || input.closest('.modal-container');
+            if (!modal) return;
+            const modalRect = modal.getBoundingClientRect();
+
+            // Available space below and above
+            const spaceBelow = Math.min(modalRect.bottom, window.innerHeight) - inputRect.bottom;
+            const spaceAbove = inputRect.top - Math.max(modalRect.top, 0);
+
+            // If space below is limited (< 210px) and there is enough space above, open upwards
+            if (spaceBelow < 210 && spaceAbove > 140) {
+                dropdown.classList.add('open-up');
+                const availableHeight = Math.max(120, Math.min(220, Math.floor(spaceAbove - 15)));
+                dropdown.style.maxHeight = availableHeight + 'px';
+            } else {
+                dropdown.classList.remove('open-up');
+                const availableHeight = Math.max(120, Math.min(220, Math.floor(spaceBelow - 15)));
+                dropdown.style.maxHeight = availableHeight + 'px';
+            }
+        };
+
         // --- Autocomplete 1: City Search ---
         const cityInput = document.getElementById('order-city');
         const citySuggestions = document.getElementById('order-city-suggestions');
@@ -1026,17 +1050,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 const query = cityInput.value.trim();
                 if (query.length < 2) {
                     citySuggestions.classList.remove('active');
+                    citySuggestions.classList.remove('open-up');
                     citySuggestions.innerHTML = '';
                     return;
                 }
 
                 citySuggestions.innerHTML = '<div class="autocomplete-loading">Пошук населеного пункту...</div>';
                 citySuggestions.classList.add('active');
+                updateDropdownPlacement(cityInput, citySuggestions);
 
                 cityDebounceTimer = setTimeout(async () => {
                     const list = await searchNPSettlements(query);
                     if (!list || list.length === 0) {
                         citySuggestions.innerHTML = '<div class="autocomplete-empty">Населений пункт не знайдено</div>';
+                        updateDropdownPlacement(cityInput, citySuggestions);
                         return;
                     }
 
@@ -1046,6 +1073,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="autocomplete-item-sub">${item.Present}</div>
                         </div>
                     `).join('');
+                    updateDropdownPlacement(cityInput, citySuggestions);
                 }, 250);
             });
 
@@ -1060,6 +1088,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 cityInput.value = presentName || mainName;
                 citySuggestions.classList.remove('active');
+                citySuggestions.classList.remove('open-up');
                 citySuggestions.innerHTML = '';
 
                 // Reset cached branches for new city
@@ -1091,6 +1120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const renderBranches = (list) => {
                 if (!list || list.length === 0) {
                     dropdown.innerHTML = '<div class="autocomplete-empty">Відділень не знайдено</div>';
+                    updateDropdownPlacement(input, dropdown);
                     return;
                 }
 
@@ -1100,6 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="autocomplete-item-sub">${w.description}</div>
                     </div>
                 `).join('');
+                updateDropdownPlacement(input, dropdown);
             };
 
             const showBranches = async () => {
@@ -1110,12 +1141,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else {
                         dropdown.innerHTML = '<div class="autocomplete-empty">⚠️ Спочатку введіть та оберіть населений пункт вище</div>';
                         dropdown.classList.add('active');
+                        updateDropdownPlacement(input, dropdown);
                         return;
                     }
                 }
 
                 dropdown.innerHTML = '<div class="autocomplete-loading">Завантаження списку відділень...</div>';
                 dropdown.classList.add('active');
+                updateDropdownPlacement(input, dropdown);
 
                 let cache = isCargoOnly ? cachedCargoWarehouses : cachedWarehouses;
                 if (!cache || cache.length === 0) {
@@ -1139,6 +1172,8 @@ document.addEventListener('DOMContentLoaded', () => {
             input.addEventListener('focus', showBranches);
             input.addEventListener('input', async () => {
                 dropdown.classList.add('active');
+                updateDropdownPlacement(input, dropdown);
+
                 let cache = isCargoOnly ? cachedCargoWarehouses : cachedWarehouses;
                 if (!cache || cache.length === 0) {
                     await showBranches();
@@ -1157,6 +1192,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!item) return;
                 input.value = item.getAttribute('data-desc');
                 dropdown.classList.remove('active');
+                dropdown.classList.remove('open-up');
             });
         };
 
@@ -1166,8 +1202,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Close dropdowns on outside click
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.autocomplete-wrapper')) {
-                document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('active'));
+                document.querySelectorAll('.autocomplete-dropdown').forEach(d => {
+                    d.classList.remove('active');
+                    d.classList.remove('open-up');
+                });
             }
+        });
+
+        window.addEventListener('resize', () => {
+            document.querySelectorAll('.autocomplete-wrapper').forEach(wrap => {
+                const inp = wrap.querySelector('input');
+                const drop = wrap.querySelector('.autocomplete-dropdown.active');
+                if (inp && drop) updateDropdownPlacement(inp, drop);
+            });
         });
 
         window.openCheckoutModal = () => {
