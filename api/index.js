@@ -258,32 +258,53 @@ const TG_CHAT_ID = process.env.TG_CHAT_ID;
 
 app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
     try {
-        const { name, phone, items, total } = req.body;
+        const { name, phone, items, total, delivery } = req.body;
 
-        let message = `📦 *НОВЕ ЗАМОВЛЕННЯ!*\n\n`;
-        message += `👤 *Клієнт:* ${name}\n`;
-        message += `📞 *Телефон:* ${phone}\n`;
-        message += `\n🛒 *Товари:*\n`;
+        const esc = (str) => String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
 
-        items.forEach((item, idx) => {
-            message += `${idx + 1}. ${item.title} ${item.qty > 1 ? '(' + item.qty + ' шт.)' : ''} — ${item.price}\n`;
+        let message = `📦 <b>НОВЕ ЗАМОВЛЕННЯ!</b>\n\n`;
+        message += `👤 <b>Клієнт:</b> ${esc(name)}\n`;
+        message += `📞 <b>Телефон:</b> ${esc(phone)}\n`;
+
+        if (delivery) {
+            message += `\n🚚 <b>Спосіб доставки:</b> ${esc(delivery.label || delivery.type || 'Нова Пошта')}\n`;
+            if (delivery.city) {
+                message += `📍 <b>Населений пункт:</b> ${esc(delivery.city)}\n`;
+            }
+            if (delivery.branch) {
+                message += `🏢 <b>Відділення:</b> ${esc(delivery.branch)}\n`;
+            }
+            if (delivery.courier_address) {
+                message += `🏠 <b>Адреса кур'єра:</b> ${esc(delivery.courier_address)}\n`;
+            }
+        }
+
+        message += `\n🛒 <b>Товари:</b>\n`;
+
+        (items || []).forEach((item, idx) => {
+            message += `${idx + 1}. ${esc(item.title)} ${item.qty > 1 ? '(' + item.qty + ' шт.)' : ''} — ${esc(item.price)}\n`;
         });
 
-        message += `\n💰 *РАЗОМ:* ${total}\n---`;
+        message += `\n💰 <b>РАЗОМ:</b> ${esc(total)}\n---`;
 
         const tgResp = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: message, parse_mode: 'Markdown' })
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: message, parse_mode: 'HTML' })
         });
 
         const tgRes = await tgResp.json();
         if (tgRes.ok) {
             res.json({ success: true });
         } else {
-            res.status(500).json({ success: false, error: 'Telegram API error' });
+            console.error('Telegram API error:', tgRes);
+            res.status(500).json({ success: false, error: 'Telegram API error: ' + (tgRes.description || '') });
         }
     } catch (e) {
+        console.error('Checkout error:', e);
         res.status(500).json({ success: false, error: e.message });
     }
 });

@@ -1287,7 +1287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitBtn.textContent = 'ВІДПРАВЛЯЄМО...';
 
             const formData = new FormData(checkoutForm);
-            const deliveryType = formData.get('delivery_type') || null;
+            const deliveryType = formData.get('delivery_type') || checkoutForm.querySelector('input[name="delivery_type"]:checked')?.value || 'np';
             const deliveryLabels = {
                 np:         'Нова Пошта (відділення)',
                 np_cargo:   'Нова Пошта (тільки вантажні відділення)',
@@ -1295,16 +1295,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 ukrpost:    'Укрпошта (відділення)'
             };
 
+            const cityVal = document.getElementById('order-city')?.value.trim() || formData.get('city') || '';
+            const npBranchVal = document.getElementById('order-np-branch')?.value.trim() || formData.get('np_branch') || '';
+            const npCargoVal = document.getElementById('order-np-cargo')?.value.trim() || formData.get('np_cargo_branch') || '';
+            const courierAddressVal = document.getElementById('order-np-courier-address')?.value.trim() || formData.get('np_courier_address') || '';
+            const ukrpostVal = document.getElementById('order-ukrpost-branch')?.value.trim() || formData.get('ukrpost_branch') || '';
+
+            const branchVal = deliveryType === 'np_cargo' ? npCargoVal : (deliveryType === 'ukrpost' ? ukrpostVal : npBranchVal);
+
             const orderData = {
-                name: formData.get('name'),
-                phone: formData.get('phone'),
-                delivery: deliveryType ? {
+                name: formData.get('name') || document.getElementById('order-name')?.value.trim(),
+                phone: formData.get('phone') || document.getElementById('order-phone')?.value.trim(),
+                delivery: {
                     type: deliveryType,
                     label: deliveryLabels[deliveryType] || deliveryType,
-                    city: formData.get('city') || '',
-                    branch: formData.get('np_branch') || formData.get('np_cargo_branch') || formData.get('ukrpost_branch') || '',
-                    courier_address: formData.get('np_courier_address') || ''
-                } : null,
+                    city: cityVal,
+                    branch: branchVal || npBranchVal || npCargoVal || ukrpostVal || '',
+                    courier_address: courierAddressVal || ''
+                },
                 items: window.getCart(),
                 total: document.querySelector('#order-summary-list .total-item span:last-child')?.textContent || 
                        document.querySelector('.cart-total span:last-child')?.textContent || '0 грн.'
