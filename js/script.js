@@ -863,7 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const title = card.querySelector('.product-title').textContent.trim();
                 const priceElem = card.querySelector('.current-price');
                 const price = priceElem ? priceElem.textContent : '0 грн.';
-                const image = card.querySelector('.product-img').src;
+                const image = card.querySelector('.product-img')?.src || '';
                 let delivery = null;
                 try { delivery = JSON.parse(card.getAttribute('data-delivery') || 'null'); } catch(e) {}
                 

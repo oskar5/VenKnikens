@@ -290,19 +290,94 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
 
         message += `\n💰 <b>РАЗОМ:</b> ${esc(total)}\n---`;
 
-        const tgResp = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: message, parse_mode: 'HTML' })
-        });
+        // Extract primary photo URL if available
+        let photoUrl = (items && items[0] && items[0].image) ? String(items[0].image).trim() : '';
 
-        const tgRes = await tgResp.json();
-        if (tgRes.ok) {
-            res.json({ success: true });
-        } else {
-            console.error('Telegram API error:', tgRes);
-            res.status(500).json({ success: false, error: 'Telegram API error: ' + (tgRes.description || '') });
+        // Fallback: lookup in Supabase products if not in item payload
+        if (!photoUrl && items && items[0] && supabase) {
+            try {
+                const titleToFind = items[0].title;
+                const { data: pData } = await supabase.from('products').select('data').limit(150);
+                if (pData) {
+                    const match = pData.map(r => r.data).find(p => p && (p.title === titleToFind || (items[0].id && p.id === items[0].id)));
+                    if (match) {
+                        photoUrl = (match.colors && match.colors[0] && match.colors[0].image) ||
+                                   (match.images && match.images[0]) || '';
+                    }
+                }
+            } catch (_) {}
         }
+
+        // Normalize photo URL
+        if (photoUrl) {
+            if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(photoUrl)) {
+                photoUrl = photoUrl.replace(/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i, 'https://venknikens.vercel.app');
+            } else if (photoUrl.startsWith('//')) {
+                photoUrl = 'https:' + photoUrl;
+            } else if (photoUrl.startsWith('/')) {
+                photoUrl = `https://venknikens.vercel.app${photoUrl}`;
+            } else if (!/^https?:\/\//i.test(photoUrl)) {
+                photoUrl = `https://venknikens.vercel.app/${photoUrl}`;
+            }
+        }
+
+        let sent = false;
+
+        // Attempt sending with photo if photoUrl is valid
+        if (photoUrl && /^https?:\/\//i.test(photoUrl)) {
+            try {
+                // Telegram caption limit is 1024 characters
+                if (message.length <= 1024) {
+                    const photoResp = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TG_CHAT_ID,
+                            photo: photoUrl,
+                            caption: message,
+                            parse_mode: 'HTML'
+                        })
+                    });
+                    const photoRes = await photoResp.json();
+                    if (photoRes.ok) {
+                        sent = true;
+                    } else {
+                        console.warn('Telegram sendPhoto failed:', photoRes.description, '— falling back to sendMessage');
+                    }
+                } else {
+                    // Message caption is too long for single sendPhoto: send photo first, then full message via sendMessage
+                    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendPhoto`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: TG_CHAT_ID,
+                            photo: photoUrl,
+                            caption: `📦 <b>НОВЕ ЗАМОВЛЕННЯ!</b>\n👤 ${esc(name)} (${esc(phone)})`,
+                            parse_mode: 'HTML'
+                        })
+                    }).catch(err => console.warn('Photo header send failed:', err.message));
+                }
+            } catch (pErr) {
+                console.warn('sendPhoto error:', pErr.message);
+            }
+        }
+
+        // Send full message if not already sent with photo
+        if (!sent) {
+            const tgResp = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TG_CHAT_ID, text: message, parse_mode: 'HTML' })
+            });
+
+            const tgRes = await tgResp.json();
+            if (!tgRes.ok) {
+                console.error('Telegram API error:', tgRes);
+                return res.status(500).json({ success: false, error: 'Telegram API error: ' + (tgRes.description || '') });
+            }
+        }
+
+        res.json({ success: true });
     } catch (e) {
         console.error('Checkout error:', e);
         res.status(500).json({ success: false, error: e.message });
