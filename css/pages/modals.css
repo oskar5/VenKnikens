@@ -185,17 +185,67 @@
     overflow-wrap: break-word;
 }
 
-/* Product Details Split (Description & Characteristics 50/50 Full Width) */
+/* Product Page Layout */
+.product-page-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 50px;
+}
+
+.product-page-layout .modal-thumbs {
+    width: 65px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product-main-content {
+    flex-grow: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-hero-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items: start;
+    width: 100%;
+}
+
+.product-hero-row .modal-main-img {
+    width: 100%;
+    position: relative;
+    cursor: zoom-in;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    background-color: #f8fafc;
+}
+
+.product-hero-row .modal-main-img img {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 460px;
+    object-fit: contain;
+    object-position: center top;
+}
+
+/* Product Details Split (Description & Characteristics 50/50 - directly below main photo) */
 .product-details-split {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 40px;
+    gap: 36px;
     align-items: start;
-    margin-top: 15px;
-    padding-top: 20px;
+    margin-top: 20px;
+    padding-top: 18px;
     border-top: 1px solid #e2e8f0;
-    margin-left: 85px;
-    width: calc(100% - 85px);
+    width: 100%;
     box-sizing: border-box;
 }
 
@@ -286,6 +336,20 @@
 }
 
 @media (max-width: 860px) {
+    .product-page-layout {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .product-page-layout .modal-thumbs {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        order: 2;
+    }
+    .product-hero-row {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
     .product-details-split {
         grid-template-columns: 1fr;
         gap: 24px;

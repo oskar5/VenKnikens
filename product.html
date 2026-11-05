@@ -65,97 +65,102 @@
                 <li class="current" id="dyn-breadcrumb">Назва товару</li>
             </ul>
 
-            <!-- Product Hero Grid -->
-            <div class="product-detail-grid">
-                <!-- Gallery -->
-                <div class="modal-gallery">
-                    <div class="modal-thumbs" id="dyn-thumbs">
-                        <!-- Thumbs will be injected here -->
-                    </div>
-                    <div class="modal-main-img" style="position: relative;">
-                        <span id="dyn-badge" class="sale-badge" style="display:none; pointer-events: none;"></span>
-                        <button class="gallery-nav prev" id="gallery-prev"><span class="iconify"
-                                data-icon="material-symbols:chevron-left"></span></button>
-                        <img id="main-product-img" src="" alt="Головне фото">
-                        <button class="gallery-nav next" id="gallery-next"><span class="iconify"
-                                data-icon="material-symbols:chevron-right"></span></button>
-                    </div>
+            <!-- Product Page Main Layout -->
+            <div class="product-page-layout">
+                <!-- Left Column: Vertical Thumbnails -->
+                <div class="modal-thumbs" id="dyn-thumbs">
+                    <!-- Thumbs will be injected here -->
                 </div>
 
-                <!-- Product Info -->
-                <div class="modal-info">
-                    <h1 class="m-product-title" id="dyn-title">Завантаження...</h1>
-                    <span class="m-product-sku" id="dyn-sku">Артикул: ...</span>
-                    <div id="dyn-avail" class="m-product-availability"></div>
+                <!-- Right Column: Product Content Area (Hero + Details) -->
+                <div class="product-main-content">
+                    <div class="product-hero-row">
+                        <!-- Main Image -->
+                        <div class="modal-main-img" style="position: relative;">
+                            <span id="dyn-badge" class="sale-badge" style="display:none; pointer-events: none;"></span>
+                            <button class="gallery-nav prev" id="gallery-prev"><span class="iconify"
+                                    data-icon="material-symbols:chevron-left"></span></button>
+                            <img id="main-product-img" src="" alt="Головне фото">
+                            <button class="gallery-nav next" id="gallery-next"><span class="iconify"
+                                    data-icon="material-symbols:chevron-right"></span></button>
+                        </div>
 
-                    <div class="m-product-pricing">
-                        <span class="m-current-price" id="dyn-price">... грн.</span>
-                        <span class="m-old-price" id="dyn-old-price">... грн.</span>
-                    </div>
+                        <!-- Product Purchase Info -->
+                        <div class="modal-info">
+                            <h1 class="m-product-title" id="dyn-title">Завантаження...</h1>
+                            <span class="m-product-sku" id="dyn-sku">Артикул: ...</span>
+                            <div id="dyn-avail" class="m-product-availability"></div>
 
-                    <!-- Color Selection (Will show static colors for now, or hide if none) -->
-                    <div class="color-select-group" id="dyn-colors">
-                        <span class="m-label-sm">Колір</span>
-                        <div class="dropdown-wrapper">
-                            <div class="m-color-select" id="color-select-head">
-                                <img src="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png"
-                                    alt="White" class="color-thumb-sm">
-                                <span>Білий</span>
+                            <div class="m-product-pricing">
+                                <span class="m-current-price" id="dyn-price">... грн.</span>
+                                <span class="m-old-price" id="dyn-old-price">... грн.</span>
                             </div>
-                            <ul class="color-options-list">
-                                <li class="color-option" data-color="Білий"
-                                    data-img="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png">
-                                    <img src="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png"
-                                        alt="White" class="color-thumb-sm">
-                                    <span>Білий</span>
-                                </li>
-                                <li class="color-option" data-color="Венге"
-                                    data-img="https://static.tildacdn.one/tild6333-3162-4366-b962-643331613861/Rectangle_1_1.png">
-                                    <img src="https://static.tildacdn.one/tild6333-3162-4366-b962-643331613861/Rectangle_1_1.png"
-                                        alt="Wenge" class="color-thumb-sm">
-                                    <span>Венге</span>
-                                </li>
-                                <li class="color-option" data-color="Дуб Сонома"
-                                    data-img="https://static.tildacdn.one/tild3133-3765-4564-b531-316133613264/Rectangle_1_3.png">
-                                    <img src="https://static.tildacdn.one/tild3133-3765-4564-b531-316133613264/Rectangle_1_3.png"
-                                        alt="Oak" class="color-thumb-sm">
-                                    <span>Дуб Сонома</span>
-                                </li>
-                            </ul>
+
+                            <!-- Color Selection (Will show static colors for now, or hide if none) -->
+                            <div class="color-select-group" id="dyn-colors">
+                                <span class="m-label-sm">Колір</span>
+                                <div class="dropdown-wrapper">
+                                    <div class="m-color-select" id="color-select-head">
+                                        <img src="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png"
+                                            alt="White" class="color-thumb-sm">
+                                        <span>Білий</span>
+                                    </div>
+                                    <ul class="color-options-list">
+                                        <li class="color-option" data-color="Білий"
+                                            data-img="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png">
+                                            <img src="https://static.tildacdn.one/tild3164-3230-4131-b062-666336333939/Rectangle_1.png"
+                                                alt="White" class="color-thumb-sm">
+                                            <span>Білий</span>
+                                        </li>
+                                        <li class="color-option" data-color="Венге"
+                                            data-img="https://static.tildacdn.one/tild6333-3162-4366-b962-643331613861/Rectangle_1_1.png">
+                                            <img src="https://static.tildacdn.one/tild6333-3162-4366-b962-643331613861/Rectangle_1_1.png"
+                                                alt="Wenge" class="color-thumb-sm">
+                                            <span>Венге</span>
+                                        </li>
+                                        <li class="color-option" data-color="Дуб Сонома"
+                                            data-img="https://static.tildacdn.one/tild3133-3765-4564-b531-316133613264/Rectangle_1_3.png">
+                                            <img src="https://static.tildacdn.one/tild3133-3765-4564-b531-316133613264/Rectangle_1_3.png"
+                                                alt="Oak" class="color-thumb-sm">
+                                            <span>Дуб Сонома</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="m-actions">
+                                <div class="qty-control">
+                                    <button class="qty-btn minus">-</button>
+                                    <input type="number" class="qty-input" value="1" min="1">
+                                    <button class="qty-btn plus">+</button>
+                                </div>
+                                <button class="order-btn">ЗАМОВИТИ</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="m-actions">
-                        <div class="qty-control">
-                            <button class="qty-btn minus">-</button>
-                            <input type="number" class="qty-input" value="1" min="1">
-                            <button class="qty-btn plus">+</button>
+                    <!-- 2-column Description & Characteristics (Starts right at bottom edge of main photo) -->
+                    <div class="product-details-split">
+                        <div class="product-desc-col">
+                            <h4 class="product-details-subtitle">
+                                <span class="iconify" data-icon="material-symbols:description-outline"></span>
+                                Опис:
+                            </h4>
+                            <div class="m-product-desc" id="dyn-desc">
+                                Опис товару...
+                            </div>
                         </div>
-                        <button class="order-btn">ЗАМОВИТИ</button>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Full-width 2-column Description & Characteristics -->
-            <div class="product-details-split">
-                <div class="product-desc-col">
-                    <h4 class="product-details-subtitle">
-                        <span class="iconify" data-icon="material-symbols:description-outline"></span>
-                        Опис:
-                    </h4>
-                    <div class="m-product-desc" id="dyn-desc">
-                        Опис товару...
-                    </div>
-                </div>
-
-                <div class="product-specs-col">
-                    <div class="m-specs">
-                        <h4 class="product-details-subtitle">
-                            <span class="iconify" data-icon="material-symbols:straighten-outline"></span>
-                            Характеристики:
-                        </h4>
-                        <div id="dyn-specs-list">
-                            <!-- Specs will be injected here -->
+                        <div class="product-specs-col">
+                            <div class="m-specs">
+                                <h4 class="product-details-subtitle">
+                                    <span class="iconify" data-icon="material-symbols:straighten-outline"></span>
+                                    Характеристики:
+                                </h4>
+                                <div id="dyn-specs-list">
+                                    <!-- Specs will be injected here -->
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
