@@ -289,6 +289,74 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
 });
 
 // ==============================
+// API: Delivery Autocomplete (Nova Poshta)
+// ==============================
+app.get('/api/delivery/settlements', async (req, res) => {
+    try {
+        const query = (req.query.query || '').trim();
+        if (!query || query.length < 2) return res.json({ success: true, addresses: [] });
+
+        const npResp = await fetch('https://api.novaposhta.ua/v2.0/json/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelName: 'Address',
+                calledMethod: 'searchSettlements',
+                methodProperties: { CityName: query, Limit: '15' }
+            })
+        });
+
+        const npData = await npResp.json();
+        const addresses = (npData.data && npData.data[0] && npData.data[0].Addresses) || [];
+        res.json({ success: true, addresses });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+app.get('/api/delivery/warehouses', async (req, res) => {
+    try {
+        const { settlementRef, cityName, cargoOnly } = req.query;
+        const methodProperties = { Limit: '250' };
+
+        if (settlementRef) {
+            methodProperties.SettlementRef = settlementRef;
+        } else if (cityName) {
+            methodProperties.CityName = cityName;
+        } else {
+            return res.json({ success: true, warehouses: [] });
+        }
+
+        if (cargoOnly === 'true' || cargoOnly === '1') {
+            methodProperties.TypeOfWarehouseRef = '9a68df70-0267-42a8-bb5c-37f427e36ee4';
+        }
+
+        const npResp = await fetch('https://api.novaposhta.ua/v2.0/json/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelName: 'AddressGeneral',
+                calledMethod: 'getWarehouses',
+                methodProperties
+            })
+        });
+
+        const npData = await npResp.json();
+        const warehouses = (npData.data || []).map(w => ({
+            number: w.Number,
+            description: w.Description,
+            ref: w.Ref,
+            type: w.TypeOfWarehouse,
+            shortAddress: w.ShortAddress
+        }));
+
+        res.json({ success: true, warehouses });
+    } catch (e) {
+        res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ==============================
 // API: Proxy
 // ==============================
 app.get('/api/proxy', requireAdmin, async (req, res) => {

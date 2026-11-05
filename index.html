@@ -230,58 +230,76 @@
             <div class="checkout-form-wrapper">
                 <h3>Оформлення замовлення</h3>
                 <p>Останній крок до покупки! Заповніть ваші дані.</p>
-                <form id="checkout-form">
-                    <div class="form-group">
-                        <label for="order-name">Ім'я та Прізвище</label>
-                        <input type="text" id="order-name" name="name" placeholder="Введіть ваше ім'я" required>
+                <form id="checkout-form" class="checkout-grid-layout">
+                    <!-- Left: Contacts & Delivery -->
+                    <div class="checkout-col-main">
+                        <div class="checkout-row-2col">
+                            <div class="form-group">
+                                <label for="order-name">Ім'я та Прізвище</label>
+                                <input type="text" id="order-name" name="name" placeholder="Введіть ваше ім'я" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="order-phone">Номер телефону</label>
+                                <input type="tel" id="order-phone" name="phone" placeholder="+38 (___) ___ ____" required>
+                            </div>
+                        </div>
+
+                        <!-- Delivery Section -->
+                        <div class="form-group" id="checkout-delivery-section" style="display:none;">
+                            <label>Спосіб доставки</label>
+                            <div id="checkout-delivery-options" class="checkout-delivery-options-grid"></div>
+
+                            <!-- City input with live autocomplete -->
+                            <div id="checkout-city-group" class="checkout-delivery-field autocomplete-wrapper" style="display:none;">
+                                <label for="order-city">Населений пункт</label>
+                                <input type="text" id="order-city" name="city" placeholder="Почніть вводити назву (напр. Київ, Львів...)" autocomplete="off">
+                                <div id="order-city-suggestions" class="autocomplete-dropdown"></div>
+                            </div>
+
+                            <!-- NP Standard Branch with live search -->
+                            <div id="checkout-np-branch-group" class="checkout-delivery-field autocomplete-wrapper" style="display:none;">
+                                <label for="order-np-branch">Відділення Нової Пошти</label>
+                                <input type="text" id="order-np-branch" name="np_branch" placeholder="Оберіть місто або введіть номер відділення" autocomplete="off">
+                                <div id="order-np-branch-suggestions" class="autocomplete-dropdown"></div>
+                            </div>
+
+                            <!-- NP Cargo Branch with live search -->
+                            <div id="checkout-np-cargo-group" class="checkout-delivery-field autocomplete-wrapper" style="display:none;">
+                                <label for="order-np-cargo">Вантажне відділення Нової Пошти</label>
+                                <input type="text" id="order-np-cargo" name="np_cargo_branch" placeholder="Оберіть місто або введіть номер вантажного відділення" autocomplete="off">
+                                <div id="order-np-cargo-suggestions" class="autocomplete-dropdown"></div>
+                            </div>
+
+                            <!-- NP Courier Address -->
+                            <div id="checkout-np-courier-group" class="checkout-delivery-field" style="display:none;">
+                                <label for="order-np-courier-address">Адреса для курʼєра Нової Пошти</label>
+                                <input type="text" id="order-np-courier-address" name="np_courier_address" placeholder="Вулиця, номер будинку, квартира">
+                            </div>
+
+                            <!-- Ukrposhta Branch -->
+                            <div id="checkout-ukrpost-group" class="checkout-delivery-field" style="display:none;">
+                                <label for="order-ukrpost-branch">Відділення Укрпошти</label>
+                                <input type="text" id="order-ukrpost-branch" name="ukrpost_branch" placeholder="Введіть номер або індекс відділення Укрпошти">
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="order-phone">Номер телефону</label>
-                        <input type="tel" id="order-phone" name="phone" placeholder="+38 (___) ___ ____" required>
-                    </div>
 
-                    <!-- Delivery Section -->
-                    <div class="form-group" id="checkout-delivery-section" style="display:none;">
-                        <label>Спосіб доставки</label>
-                        <div id="checkout-delivery-options" style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;"></div>
-
-                        <!-- City input -->
-                        <div id="checkout-city-group" class="checkout-delivery-field" style="display:none; margin-bottom:12px;">
-                            <label for="order-city">Населений пункт</label>
-                            <input type="text" id="order-city" name="city" placeholder="Введіть місто або село">
-                        </div>
-
-                        <!-- NP Branch -->
-                        <div id="checkout-np-branch-group" class="checkout-delivery-field" style="display:none; margin-bottom:12px;">
-                            <label for="order-np-branch">Відділення Нової Пошти</label>
-                            <input type="text" id="order-np-branch" name="np_branch" placeholder="Введіть номер або адресу відділення">
-                        </div>
-
-                        <!-- NP Cargo Branch -->
-                        <div id="checkout-np-cargo-group" class="checkout-delivery-field" style="display:none; margin-bottom:12px;">
-                            <label for="order-np-cargo">Вантажне відділення Нової Пошти</label>
-                            <input type="text" id="order-np-cargo" name="np_cargo_branch" placeholder="Введіть номер або адресу вантажного відділення">
-                        </div>
-
-                        <!-- NP Courier Address -->
-                        <div id="checkout-np-courier-group" class="checkout-delivery-field" style="display:none; margin-bottom:12px;">
-                            <label for="order-np-courier-address">Адреса для курʼєра Нової Пошти</label>
-                            <input type="text" id="order-np-courier-address" name="np_courier_address" placeholder="Вулиця, будинок, квартира">
-                        </div>
-
-                        <!-- Ukrposhta Branch -->
-                        <div id="checkout-ukrpost-group" class="checkout-delivery-field" style="display:none; margin-bottom:12px;">
-                            <label for="order-ukrpost-branch">Відділення Укрпошти</label>
-                            <input type="text" id="order-ukrpost-branch" name="ukrpost_branch" placeholder="Введіть номер або індекс відділення Укрпошти">
+                    <!-- Right: Summary Box & Submit -->
+                    <div class="checkout-col-side">
+                        <div class="checkout-summary-box">
+                            <h4>Ваше замовлення</h4>
+                            <div class="checkout-summary" id="order-summary-list">
+                                <!-- Summary items injected via JS -->
+                            </div>
+                            <button type="submit" class="btn checkout-submit-btn" id="submit-order">
+                                ПІДТВЕРДИТИ ЗАМОВЛЕННЯ
+                            </button>
+                            <div class="checkout-trust-badge">
+                                <span class="iconify" data-icon="material-symbols:shield-check-outline"></span>
+                                <span>Оплата при отриманні товару</span>
+                            </div>
                         </div>
                     </div>
-
-                    <div class="checkout-summary" id="order-summary-list">
-                        <!-- Summary items injected via JS -->
-                    </div>
-                    <button type="submit" class="btn checkout-submit-btn" id="submit-order">
-                        ПІДТВЕРДИТИ ЗАМОВЛЕННЯ
-                    </button>
                 </form>
             </div>
         </div>

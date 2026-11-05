@@ -897,6 +897,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!checkoutModal) return;
 
+        let selectedSettlementRef = null;
+        let selectedCityName = '';
+        let cachedWarehouses = [];
+        let cachedCargoWarehouses = [];
+
         // Delivery type radio selection handler
         const deliveryFields = {
             'np':         ['checkout-city-group', 'checkout-np-branch-group'],
@@ -921,19 +926,247 @@ document.addEventListener('DOMContentLoaded', () => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.style.display = 'block';
-                    // Make non-city inputs required
-                    if (id !== 'checkout-city-group') {
-                        el.querySelectorAll('input').forEach(i => i.required = true);
-                    } else {
-                        el.querySelectorAll('input').forEach(i => i.required = true);
-                    }
+                    el.querySelectorAll('input').forEach(i => i.required = true);
                 }
             });
+
+            // If city is already chosen, preload branch list
+            if (selectedSettlementRef || selectedCityName) {
+                if (type === 'np') preloadWarehouses(false);
+                if (type === 'np_cargo') preloadWarehouses(true);
+            }
         };
 
         checkoutModal.addEventListener('change', (e) => {
             if (e.target.name === 'delivery_type') {
                 showDeliveryFields(e.target.value);
+            }
+        });
+
+        // --- Nova Poshta API Helpers ---
+        const searchNPSettlements = async (query) => {
+            try {
+                const resp = await fetch(`/api/delivery/settlements?query=${encodeURIComponent(query)}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.addresses) return data.addresses;
+                }
+            } catch (e) {}
+
+            try {
+                const resp = await fetch('https://api.novaposhta.ua/v2.0/json/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        modelName: 'Address',
+                        calledMethod: 'searchSettlements',
+                        methodProperties: { CityName: query, Limit: '15' }
+                    })
+                });
+                const data = await resp.json();
+                return (data.data && data.data[0] && data.data[0].Addresses) || [];
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const fetchNPWarehouses = async (settlementRef, cityName, isCargoOnly) => {
+            try {
+                const resp = await fetch(`/api/delivery/warehouses?settlementRef=${encodeURIComponent(settlementRef || '')}&cityName=${encodeURIComponent(cityName || '')}&cargoOnly=${isCargoOnly ? 'true' : 'false'}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.success && data.warehouses) return data.warehouses;
+                }
+            } catch (e) {}
+
+            try {
+                const methodProperties = { Limit: '250' };
+                if (settlementRef) methodProperties.SettlementRef = settlementRef;
+                else if (cityName) methodProperties.CityName = cityName;
+                if (isCargoOnly) methodProperties.TypeOfWarehouseRef = '9a68df70-0267-42a8-bb5c-37f427e36ee4';
+
+                const resp = await fetch('https://api.novaposhta.ua/v2.0/json/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        modelName: 'AddressGeneral',
+                        calledMethod: 'getWarehouses',
+                        methodProperties
+                    })
+                });
+                const data = await resp.json();
+                return (data.data || []).map(w => ({
+                    number: w.Number,
+                    description: w.Description,
+                    ref: w.Ref,
+                    type: w.TypeOfWarehouse,
+                    shortAddress: w.ShortAddress
+                }));
+            } catch (e) {
+                return [];
+            }
+        };
+
+        const preloadWarehouses = async (isCargoOnly) => {
+            if (isCargoOnly && cachedCargoWarehouses.length === 0) {
+                cachedCargoWarehouses = await fetchNPWarehouses(selectedSettlementRef, selectedCityName, true);
+            } else if (!isCargoOnly && cachedWarehouses.length === 0) {
+                cachedWarehouses = await fetchNPWarehouses(selectedSettlementRef, selectedCityName, false);
+            }
+        };
+
+        // --- Autocomplete 1: City Search ---
+        const cityInput = document.getElementById('order-city');
+        const citySuggestions = document.getElementById('order-city-suggestions');
+        let cityDebounceTimer;
+
+        if (cityInput && citySuggestions) {
+            cityInput.addEventListener('input', () => {
+                clearTimeout(cityDebounceTimer);
+                const query = cityInput.value.trim();
+                if (query.length < 2) {
+                    citySuggestions.classList.remove('active');
+                    citySuggestions.innerHTML = '';
+                    return;
+                }
+
+                citySuggestions.innerHTML = '<div class="autocomplete-loading">Пошук населеного пункту...</div>';
+                citySuggestions.classList.add('active');
+
+                cityDebounceTimer = setTimeout(async () => {
+                    const list = await searchNPSettlements(query);
+                    if (!list || list.length === 0) {
+                        citySuggestions.innerHTML = '<div class="autocomplete-empty">Населений пункт не знайдено</div>';
+                        return;
+                    }
+
+                    citySuggestions.innerHTML = list.map(item => `
+                        <div class="autocomplete-item" data-ref="${item.Ref || ''}" data-name="${item.MainDescription || ''}" data-present="${item.Present || ''}">
+                            <strong>${item.MainDescription}</strong>
+                            <div class="autocomplete-item-sub">${item.Present}</div>
+                        </div>
+                    `).join('');
+                }, 250);
+            });
+
+            citySuggestions.addEventListener('click', async (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (!item) return;
+
+                const mainName = item.getAttribute('data-name');
+                const presentName = item.getAttribute('data-present');
+                selectedSettlementRef = item.getAttribute('data-ref');
+                selectedCityName = mainName;
+
+                cityInput.value = presentName || mainName;
+                citySuggestions.classList.remove('active');
+                citySuggestions.innerHTML = '';
+
+                // Reset cached branches for new city
+                cachedWarehouses = [];
+                cachedCargoWarehouses = [];
+
+                // Clear branch inputs
+                const npBranchInput = document.getElementById('order-np-branch');
+                const npCargoInput = document.getElementById('order-np-cargo');
+                if (npBranchInput) npBranchInput.value = '';
+                if (npCargoInput) npCargoInput.value = '';
+
+                // Automatically prefetch and focus branch input
+                const currentType = checkoutForm.querySelector('input[name="delivery_type"]:checked')?.value;
+                if (currentType === 'np' && npBranchInput) {
+                    npBranchInput.focus();
+                } else if (currentType === 'np_cargo' && npCargoInput) {
+                    npCargoInput.focus();
+                }
+            });
+        }
+
+        // --- Autocomplete 2: Branch Search ---
+        const setupBranchAutocomplete = (inputId, dropdownId, isCargoOnly) => {
+            const input = document.getElementById(inputId);
+            const dropdown = document.getElementById(dropdownId);
+            if (!input || !dropdown) return;
+
+            const renderBranches = (list) => {
+                if (!list || list.length === 0) {
+                    dropdown.innerHTML = '<div class="autocomplete-empty">Відділень не знайдено</div>';
+                    return;
+                }
+
+                dropdown.innerHTML = list.slice(0, 100).map(w => `
+                    <div class="autocomplete-item" data-desc="${w.description}">
+                        <strong>Відділення №${w.number}</strong>
+                        <div class="autocomplete-item-sub">${w.description}</div>
+                    </div>
+                `).join('');
+            };
+
+            const showBranches = async () => {
+                const cityVal = cityInput?.value.trim();
+                if (!selectedSettlementRef && !selectedCityName) {
+                    if (cityVal) {
+                        selectedCityName = cityVal;
+                    } else {
+                        dropdown.innerHTML = '<div class="autocomplete-empty">⚠️ Спочатку введіть та оберіть населений пункт вище</div>';
+                        dropdown.classList.add('active');
+                        return;
+                    }
+                }
+
+                dropdown.innerHTML = '<div class="autocomplete-loading">Завантаження списку відділень...</div>';
+                dropdown.classList.add('active');
+
+                let cache = isCargoOnly ? cachedCargoWarehouses : cachedWarehouses;
+                if (!cache || cache.length === 0) {
+                    cache = await fetchNPWarehouses(selectedSettlementRef, selectedCityName, isCargoOnly);
+                    if (isCargoOnly) cachedCargoWarehouses = cache;
+                    else cachedWarehouses = cache;
+                }
+
+                const filterVal = input.value.trim().toLowerCase();
+                let filtered = cache;
+                if (filterVal) {
+                    filtered = cache.filter(w => 
+                        w.description.toLowerCase().includes(filterVal) || 
+                        String(w.number).toLowerCase().includes(filterVal)
+                    );
+                }
+
+                renderBranches(filtered);
+            };
+
+            input.addEventListener('focus', showBranches);
+            input.addEventListener('input', async () => {
+                dropdown.classList.add('active');
+                let cache = isCargoOnly ? cachedCargoWarehouses : cachedWarehouses;
+                if (!cache || cache.length === 0) {
+                    await showBranches();
+                    return;
+                }
+                const filterVal = input.value.trim().toLowerCase();
+                const filtered = cache.filter(w => 
+                    w.description.toLowerCase().includes(filterVal) || 
+                    String(w.number).toLowerCase().includes(filterVal)
+                );
+                renderBranches(filtered);
+            });
+
+            dropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.autocomplete-item');
+                if (!item) return;
+                input.value = item.getAttribute('data-desc');
+                dropdown.classList.remove('active');
+            });
+        };
+
+        setupBranchAutocomplete('order-np-branch', 'order-np-branch-suggestions', false);
+        setupBranchAutocomplete('order-np-cargo', 'order-np-cargo-suggestions', true);
+
+        // Close dropdowns on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.autocomplete-wrapper')) {
+                document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('active'));
             }
         });
 
@@ -953,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
             });
             
-            html += `<div class="checkout-summary-item" style="font-weight:700; margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            html += `<div class="checkout-summary-item total-item">
                         <span>Разом:</span>
                         <span>${total} грн.</span>
                     </div>`;
@@ -1021,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 deliverySection.style.display = 'block';
                 deliveryOptionsContainer.innerHTML = options.map((opt, idx) => `
-                    <label style="display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:10px; cursor:pointer; font-weight:500; font-size:14px; transition: border-color 0.2s;">
+                    <label>
                         <input type="radio" name="delivery_type" value="${opt.key}" ${idx === 0 ? 'checked' : ''} style="accent-color:var(--accent-blue,#2563eb); width:16px; height:16px;">
                         ${opt.label}
                     </label>
@@ -1037,6 +1270,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeCheckoutModal = () => {
             checkoutModal.classList.remove('active');
             document.body.style.overflow = '';
+            document.querySelectorAll('.autocomplete-dropdown').forEach(d => d.classList.remove('active'));
         };
 
         closeCheckout?.addEventListener('click', closeCheckoutModal);
@@ -1072,7 +1306,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     courier_address: formData.get('np_courier_address') || ''
                 } : null,
                 items: window.getCart(),
-                total: document.querySelector('.cart-total span:last-child')?.textContent || '0 грн.'
+                total: document.querySelector('#order-summary-list .total-item span:last-child')?.textContent || 
+                       document.querySelector('.cart-total span:last-child')?.textContent || '0 грн.'
             };
 
             try {
