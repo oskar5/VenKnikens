@@ -656,6 +656,94 @@ body.modal-open {
     }
 }
 
+@media (max-width: 600px) {
+    .m-actions {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        width: 100% !important;
+        margin-top: 20px !important;
+        margin-bottom: 25px !important;
+    }
+
+    .qty-control {
+        height: 52px !important;
+        width: 110px !important;
+        border-radius: 14px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .qty-btn {
+        width: 36px !important;
+        font-size: 22px !important;
+    }
+
+    .qty-input {
+        width: 38px !important;
+        font-size: 17px !important;
+    }
+
+    .order-btn {
+        flex: 1 !important;
+        min-width: 0 !important;
+        height: 52px !important;
+        font-size: 14.5px !important;
+        font-weight: 700 !important;
+        border-radius: 14px !important;
+        padding: 0 12px !important;
+        white-space: normal !important;
+        text-align: center !important;
+        line-height: 1.25 !important;
+        box-shadow: 0 4px 14px rgba(41, 54, 74, 0.25) !important;
+    }
+
+    .m-color-select {
+        max-width: 100% !important;
+        min-height: 48px !important;
+        border-radius: 12px !important;
+        padding: 10px 14px !important;
+    }
+
+    .checkout-container {
+        padding: 22px 16px !important;
+        border-radius: 20px !important;
+        width: 100% !important;
+    }
+
+    .checkout-col-main .form-group input,
+    .checkout-col-main .form-group textarea,
+    .checkout-delivery-field input {
+        min-height: 48px !important;
+        font-size: 16px !important;
+        border-radius: 12px !important;
+        padding: 12px 14px !important;
+    }
+
+    .checkout-delivery-options-grid label {
+        padding: 12px 14px !important;
+        font-size: 14px !important;
+        min-height: 48px !important;
+        border-radius: 12px !important;
+    }
+
+    .checkout-submit-btn {
+        min-height: 54px !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        border-radius: 14px !important;
+        padding: 16px 20px !important;
+    }
+
+    .checkout-btn {
+        min-height: 52px !important;
+        font-size: 16px !important;
+        font-weight: 700 !important;
+        border-radius: 14px !important;
+        padding: 15px 20px !important;
+    }
+}
+
 /* ---------------------------------------------------------
    SHOPPING CART & CHECKOUT
    --------------------------------------------------------- */

@@ -222,6 +222,27 @@
     right: 40px;
 }
 
+@media (max-width: 768px) {
+    .lightbox-nav {
+        width: 48px;
+        height: 48px;
+        font-size: 28px;
+        padding: 0;
+    }
+    .lightbox-nav.prev {
+        left: 10px;
+    }
+    .lightbox-nav.next {
+        right: 10px;
+    }
+    .lightbox-close {
+        top: 15px;
+        right: 15px;
+        font-size: 34px;
+        padding: 6px;
+    }
+}
+
 .lightbox-meta {
     margin-top: 20px;
     color: #94a3b8;
