@@ -1308,7 +1308,11 @@
                     if (next) row.parentNode.insertBefore(next, row);
                 }
 
-                if (e.target.closest('.remove-item')) e.target.closest('.remove-item').parentElement.remove();
+                if (e.target.closest('.remove-item')) {
+                    const btn = e.target.closest('.remove-item');
+                    const row = btn.closest('.color-row') || btn.closest('.spec-row') || btn.parentElement;
+                    row.remove();
+                }
 
                 const uploadBtn = e.target.closest('.upload-img-btn');
                 if (uploadBtn) {
