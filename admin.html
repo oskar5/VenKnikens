@@ -629,6 +629,7 @@
             <h2 id="form-title">Додати товар</h2>
             <form id="product-form">
                 <input type="hidden" id="editing-idx" value="-1">
+                <input type="hidden" id="editing-old-id" value="">
 
                 <div class="row">
                     <div class="col form-group">
@@ -958,6 +959,24 @@
 
             document.getElementById('p-groupId').addEventListener('input', updateLinkedPreview);
             document.getElementById('p-id').addEventListener('input', updateLinkedPreview);
+
+            const cleanIdInput = () => {
+                const inp = document.getElementById('p-id');
+                let val = inp.value.trim();
+                if (val.startsWith('http://') || val.startsWith('https://')) {
+                    try {
+                        const u = new URL(val);
+                        let slug = u.pathname.replace(/^\/+|\/+$/g, '').split('/').pop() || '';
+                        slug = slug.replace(/\.html?$/i, '');
+                        if (slug) {
+                            inp.value = slug;
+                            showToast('💡 Посилання скорочено до ID: ' + slug);
+                        }
+                    } catch (_) {}
+                }
+            };
+            document.getElementById('p-id').addEventListener('blur', cleanIdInput);
+            document.getElementById('p-id').addEventListener('change', cleanIdInput);
 
             const showToast = (msg, type = 'success') => {
                 let toast = document.getElementById('admin-toast');
@@ -1397,7 +1416,9 @@
                     const idx = parseInt(copyBtn.getAttribute('data-idx'));
                     const p = window.tempProducts[idx];
                     
-                    document.getElementById('editing-idx').value = '-1'; // duplicate is a NEW item
+                    document.getElementById('editing-idx').value = '-1';
+                document.getElementById('editing-old-id').value = ''; // duplicate is a NEW item
+                    document.getElementById('editing-old-id').value = '';
                     document.getElementById('form-title').innerHTML = 'Дублювання: ' + p.title;
                     
                     // Pre-fill form
@@ -1442,6 +1463,7 @@
                     const idx = parseInt(editBtn.getAttribute('data-idx'));
                     const p = window.tempProducts[idx];
                     document.getElementById('editing-idx').value = idx;
+                    document.getElementById('editing-old-id').value = p.id;
                     document.getElementById('form-title').innerHTML = 'Редагувати: ' + p.title;
                     document.getElementById('p-id').value = p.id;
                     document.getElementById('p-sku').value = p.sku || '';
@@ -1515,6 +1537,7 @@
                 productForm.reset();
                 setAvailability('В наявності');
                 document.getElementById('editing-idx').value = '-1';
+                document.getElementById('editing-old-id').value = '';
                 document.getElementById('form-title').innerHTML = 'Створити новий товар';
                 specsContainer.innerHTML = '';
                 colorsContainer.innerHTML = '';
@@ -1679,12 +1702,17 @@
                         ukrpost: document.getElementById('p-delivery-ukrpost').checked
                     }
                 };
+                const oldId = document.getElementById('editing-old-id').value;
                 if (idx === -1) window.tempProducts.push(obj);
                 else window.tempProducts[idx] = obj;
                 formCard.style.display = 'none';
                 renderTable(false);
                 refreshCategoryLists();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                // If ID changed during editing, delete old product record
+                if (oldId && oldId !== obj.id) {
+                    await deleteProduct(oldId);
+                }
                 // Save only the changed product + update sortOrder for all
                 await saveProduct({ ...obj, sortOrder: window.tempProducts.indexOf(obj) });
             });

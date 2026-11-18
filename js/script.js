@@ -346,7 +346,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const productId = params.get('id');
 
         const notFound = document.getElementById('product-not-found');
-        const product = dataToUse.find(p => p.id === productId);
+        let product = dataToUse.find(p => p.id === productId);
+
+        if (!product && productId) {
+            const decodedId = decodeURIComponent(productId);
+            const slugFromUrl = decodedId.replace(/^https?:\/\/[^\/]+\//, '').replace(/^\/+|\/+$/g, '').split('/').pop()?.replace(/\.html?$/i, '');
+            product = dataToUse.find(p => p.id === decodedId || (slugFromUrl && (p.id === slugFromUrl || p.id.endsWith(slugFromUrl) || slugFromUrl.endsWith(p.id))));
+            if (product) {
+                try {
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('id', product.id);
+                    window.history.replaceState(null, '', newUrl.toString());
+                } catch (_) {}
+            }
+        }
         
         if (!product || product.hidden === true) {
             // ONLY show "Not Found" if we actually have custom data (meaning dynamic fetch finished)
