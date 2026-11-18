@@ -63,7 +63,7 @@ app.get('/js/products.js', async (req, res, next) => {
 // Dynamic Route: /sitemap.xml
 // ==============================
 app.get('/sitemap.xml', async (req, res) => {
-    const BASE = 'https://project-1ra3d.vercel.app';
+    const BASE = 'https://venknikens.vercel.app';
     const today = new Date().toISOString().slice(0, 10);
 
     const staticUrls = [
@@ -102,6 +102,104 @@ app.get('/sitemap.xml', async (req, res) => {
 
     res.set('Content-Type', 'application/xml; charset=utf-8');
     res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlEntries}\n</urlset>`);
+});
+
+// ==============================
+// Dynamic Route: /product.html & /product (SSR Meta Tags for Open Graph, Telegram, Viber, Google)
+// ==============================
+app.get(['/product.html', '/product'], async (req, res, next) => {
+    const productId = req.query.id;
+    const filePath = path.join(__dirname, '..', 'product.html');
+
+    if (!fs.existsSync(filePath)) return next();
+    let html = fs.readFileSync(filePath, 'utf8');
+
+    if (!productId) {
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        return res.send(html);
+    }
+
+    try {
+        let product = null;
+
+        // Try Supabase first
+        if (supabase) {
+            const { data } = await supabase.from('products').select('id, data');
+            if (data && data.length) {
+                const decodedId = decodeURIComponent(productId);
+                const slugFromUrl = decodedId.replace(/^https?:\/\/[^\/]+\//, '').replace(/^\/+|\/+$/g, '').split('/').pop()?.replace(/\.html?$/i, '');
+
+                const found = data.find(r => {
+                    const p = r.data || {};
+                    return p.id === productId || p.id === decodedId || r.id === productId || r.id === decodedId ||
+                        (slugFromUrl && (p.id === slugFromUrl || r.id === slugFromUrl || String(p.id).endsWith(slugFromUrl) || slugFromUrl.endsWith(String(p.id))));
+                });
+                if (found) product = found.data;
+            }
+        }
+
+        // Fallback to local products.js if needed
+        if (!product) {
+            try {
+                const content = fs.readFileSync(PRODUCTS_FILE, 'utf8');
+                const match = content.match(/const productsData\s*=\s*(\[[\s\S]*\]);/);
+                if (match) {
+                    const products = JSON.parse(match[1]);
+                    const decodedId = decodeURIComponent(productId);
+                    const slugFromUrl = decodedId.replace(/^https?:\/\/[^\/]+\//, '').replace(/^\/+|\/+$/g, '').split('/').pop()?.replace(/\.html?$/i, '');
+                    product = products.find(p => p.id === productId || p.id === decodedId || (slugFromUrl && (p.id === slugFromUrl || String(p.id).endsWith(slugFromUrl))));
+                }
+            } catch (_) {}
+        }
+
+        if (product && !product.hidden) {
+            const title = `${product.title} — купити за ${product.price} грн | VenKnikens`;
+            let rawDesc = (product.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!rawDesc || rawDesc.length < 20) {
+                rawDesc = `${product.title} за вигідною ціною ${product.price} грн в інтернет-магазині VenKnikens. В наявності. Швидка доставка Новою Поштою та Укрпоштою по всій Україні.`;
+            }
+            if (rawDesc.length > 200) rawDesc = rawDesc.substring(0, 197) + '...';
+
+            const img = product.colors?.[0]?.image || product.colors?.[0]?.images?.[0] || product.images?.[0] || product.img || 'https://venknikens.vercel.app/img/og-image.png';
+            const pageUrl = `https://venknikens.vercel.app/product.html?id=${encodeURIComponent(product.id)}`;
+
+            const escapeAttr = (str) => String(str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+            const metaBlock = `
+    <title>${escapeAttr(title)}</title>
+    <meta name="description" content="${escapeAttr(rawDesc)}">
+    <link rel="canonical" href="${pageUrl}">
+
+    <!-- Open Graph (Telegram, Viber, Facebook) -->
+    <meta property="og:site_name" content="VenKnikens">
+    <meta property="og:type" content="product">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:title" content="${escapeAttr(title)}">
+    <meta property="og:description" content="${escapeAttr(rawDesc)}">
+    <meta property="og:url" content="${pageUrl}">
+    <meta property="og:image" content="${escapeAttr(img)}">
+    <meta property="og:image:secure_url" content="${escapeAttr(img)}">
+    <meta property="og:image:alt" content="${escapeAttr(product.title)}">
+    <meta property="product:price:amount" content="${product.price}">
+    <meta property="product:price:currency" content="UAH">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeAttr(title)}">
+    <meta name="twitter:description" content="${escapeAttr(rawDesc)}">
+    <meta name="twitter:image" content="${escapeAttr(img)}">
+            `.trim();
+
+            html = html.replace(/<title>[\s\S]*?<link rel="stylesheet"/i, `${metaBlock}\n\n    <link rel="stylesheet"`);
+        }
+
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+    } catch (err) {
+        console.error('Error generating product page with meta:', err);
+        res.set('Content-Type', 'text/html; charset=utf-8');
+        res.send(html);
+    }
 });
 
 // Serve static files

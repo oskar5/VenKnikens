@@ -375,7 +375,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (notFound) notFound.style.display = 'none';
         container.style.display = 'block';
-        document.title = `${product.title} | VenKnikens`;
+        document.title = `${product.title} — купити за ${product.price} грн | VenKnikens`;
+        const metaDesc = document.querySelector('meta[name="description"]');
+        if (metaDesc) {
+            let d = (product.description || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (!d || d.length < 20) d = `${product.title} за вигідною ціною ${product.price} грн в інтернет-магазині VenKnikens. В наявності. Швидка доставка по Україні.`;
+            metaDesc.setAttribute('content', d.substring(0, 200));
+        }
         // Store delivery info globally so addToCart can pick it up
         window.__currentProductDelivery = product.delivery || null;
 
