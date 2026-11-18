@@ -628,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="font-size:20px; line-height:1.2;">🏭</span>
                         <div>
                             <strong>Нова Пошта (тільки вантажні відділення)</strong>
-                            <div style="font-size:13px; color:#64748b;">Великогабаритний товар — відправка на вантажні відділення (до 1000 кг). Звичайні відділення до 30 кг недоступні.</div>
+                            <div style="font-size:13px; color:#64748b;">Великогабаритний товар — відправка тільки на вантажні відділення (від 200 кг до 1000 кг).</div>
                         </div>
                     </div>`;
             } else if (hasNP) {
