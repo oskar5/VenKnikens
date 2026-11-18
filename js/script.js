@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             </div>
                             <div class="product-actions">
                                 <a href="product.html?id=${encodeURIComponent(prod.id)}" class="btn-sm btn-primary-sm">Детальніше</a>
-                                <a href="#" class="btn-sm btn-outline-sm">В кошик</a>
+                                <a href="#" class="btn-sm btn-outline-sm">Додати до замовлення</a>
                             </div>
                         </div>
                     </div>
@@ -794,12 +794,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (card) {
                         const title = card.querySelector('.product-title').textContent.trim();
                         if (cartTitles.includes(title)) {
-                            btn.innerHTML = '<span class="iconify" data-icon="material-symbols:check"></span> В кошику';
+                            btn.innerHTML = '<span class="iconify" data-icon="material-symbols:check"></span> Додано до замовлення';
                             btn.style.pointerEvents = 'none';
                             btn.style.backgroundColor = '#f0fdf4';
                             btn.style.borderColor = '#4caf50';
                         } else {
-                            btn.innerHTML = 'В кошик';
+                            btn.innerHTML = 'Додати до замовлення';
                             btn.style.pointerEvents = '';
                             btn.style.backgroundColor = '';
                             btn.style.borderColor = '';
@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const mTitle = document.querySelector('.m-product-title');
                 if (mTitle) {
                     if (cartTitles.includes(mTitle.textContent.trim())) {
-                        orderBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:check" style="margin-right: 6px; font-size: 18px; vertical-align: text-bottom;"></span>В кошику';
+                        orderBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:check" style="margin-right: 6px; font-size: 18px; vertical-align: text-bottom;"></span>Додано до замовлення';
                         orderBtn.classList.add('added');
                         orderBtn.style.backgroundColor = '#4caf50';
                         orderBtn.style.borderColor = '#4caf50';
@@ -894,9 +894,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.openCheckoutModal();
             }
 
-            // "В кошик" button on catalog items
+            // "Додати до замовлення" button on catalog items
             const outlineBtn = e.target.closest('.btn-outline-sm');
-            if(outlineBtn && outlineBtn.closest('.product-card') && outlineBtn.textContent.trim() === 'В кошик') {
+            if(outlineBtn && outlineBtn.closest('.product-card') && !outlineBtn.querySelector('.iconify')) {
                 e.preventDefault();
                 const card = outlineBtn.closest('.product-card');
                 const title = card.querySelector('.product-title').textContent.trim();
