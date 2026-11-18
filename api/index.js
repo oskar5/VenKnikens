@@ -475,6 +475,47 @@ app.get('/api/proxy', requireAdmin, async (req, res) => {
 });
 
 // ==============================
+// API: Upload image from external URL (re-host on Supabase)
+// ==============================
+app.post('/api/upload-from-url', requireAdmin, async (req, res) => {
+    const { url } = req.body || {};
+    if (!url || typeof url !== 'string') {
+        return res.status(400).json({ success: false, error: 'URL не вказано' });
+    }
+    try {
+        const response = await fetch(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+            redirect: 'follow'
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const contentType = response.headers.get('content-type') || 'image/jpeg';
+        if (!contentType.startsWith('image/')) throw new Error('Не є зображенням');
+        const buffer = Buffer.from(await response.arrayBuffer());
+        const extMap = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+        const ext = extMap[contentType.split(';')[0].trim()] || '.jpg';
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1000)}${ext}`;
+
+        if (supabase) {
+            const { error } = await supabase.storage
+                .from('product-images')
+                .upload(filename, buffer, { contentType, upsert: false });
+            if (error) throw error;
+            const { data: { publicUrl } } = supabase.storage
+                .from('product-images')
+                .getPublicUrl(filename);
+            return res.json({ success: true, url: publicUrl });
+        }
+
+        const UPLOAD_DIR = path.join(__dirname, '..', 'img', 'products');
+        if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+        fs.writeFileSync(path.join(UPLOAD_DIR, filename), buffer);
+        return res.json({ success: true, url: 'img/products/' + filename });
+    } catch (e) {
+        return res.status(500).json({ success: false, error: 'Помилка: ' + e.message });
+    }
+});
+
+// ==============================
 // API: Upload image
 // ==============================
 app.post('/api/upload', requireAdmin, upload.single('image'), async (req, res) => {

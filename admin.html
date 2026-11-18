@@ -1178,6 +1178,9 @@
                             <span class="iconify" data-icon="material-symbols:upload" style="vertical-align:middle;"></span>
                         </button>
                         <input type="file" class="color-file-input" accept="image/*" style="display:none;">
+                        <button type="button" class="btn btn-outline btn-sm reupload-main-btn" title="Перезавантажити URL на сервер" style="white-space:nowrap; height:44px;">
+                            <span class="iconify" data-icon="material-symbols:cloud-upload" style="vertical-align:middle;"></span>
+                        </button>
                         <button type="button" class="btn btn-danger btn-sm remove-item" style="height:44px;"><span class="iconify" data-icon="material-symbols:close"></span></button>
                     </div>
                     <div class="color-extra-wrap" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; padding:8px 10px; margin-top:4px;">
@@ -1204,7 +1207,39 @@
                     else { preview.classList.remove('visible'); }
                 });
 
+                div.querySelector('.reupload-main-btn').addEventListener('click', function() {
+                    reuploadFromUrl(imgInput, preview, this);
+                });
+
                 const extraList = div.querySelector('.color-extra-list');
+
+                const reuploadFromUrl = async (inp, prev, btn) => {
+                    const url = inp.value.trim();
+                    if (!url) return showToast('⚠️ Введіть URL спочатку', 'error');
+                    if (url.includes('gjzabaqwnpkeqvamukes.supabase.co')) return showToast('ℹ️ Вже завантажено на сервер');
+                    btn.disabled = true;
+                    btn.textContent = '⏳';
+                    try {
+                        const res = await fetch('/api/upload-from-url', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPwd },
+                            body: JSON.stringify({ url })
+                        }).then(handle401);
+                        const data = await res.json();
+                        if (data.success && data.url) {
+                            inp.value = data.url;
+                            prev.src = data.url;
+                            prev.classList.add('visible');
+                            showToast('✅ Завантажено на сервер!');
+                        } else {
+                            showToast('❌ ' + (data.error || 'Помилка'), 'error');
+                        }
+                    } catch (e) {
+                        showToast('❌ Помилка: ' + e.message, 'error');
+                    }
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="iconify" data-icon="material-symbols:upload" style="font-size:14px;"></span>';
+                };
 
                 const addExtraInput = (val = '') => {
                     const row = document.createElement('div');
@@ -1212,6 +1247,9 @@
                     row.innerHTML = `
                         <img src="${val || ''}" class="color-preview ${val ? 'visible' : ''}" alt="" style="width:34px; height:34px; border-radius:4px; object-fit:cover; border:1px solid #e2e8f0; flex-shrink:0;">
                         <input type="text" class="color-extra-img" placeholder="Вставте посилання на фото (URL)" value="${val}" style="flex:1; font-size:12px; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                        <button type="button" class="btn btn-outline btn-sm reupload-extra-btn" style="padding:4px 8px; height:32px; flex-shrink:0;" title="Завантажити на сервер">
+                            <span class="iconify" data-icon="material-symbols:upload" style="font-size:14px;"></span>
+                        </button>
                         <button type="button" class="btn btn-danger btn-sm remove-extra-btn" style="padding:4px 8px; height:32px; flex-shrink:0;" title="Видалити">
                             <span class="iconify" data-icon="material-symbols:close" style="font-size:14px;"></span>
                         </button>
@@ -1227,6 +1265,9 @@
                         }
                     });
 
+                    row.querySelector('.reupload-extra-btn').addEventListener('click', function() {
+                        reuploadFromUrl(extraInp, extraPrev, this);
+                    });
                     row.querySelector('.remove-extra-btn').addEventListener('click', () => row.remove());
                     extraList.appendChild(row);
                     return { row, extraInp, extraPrev };
