@@ -454,29 +454,35 @@ document.addEventListener('DOMContentLoaded', () => {
             variants = dataToUse.filter(p => p.groupId === product.groupId && p.id !== product.id && !p.hidden);
         }
 
-        // Build per-color gallery map
-        const colorGalleries = {};
+        // Build per-color gallery map on window so it is accessible globally
+        window.__colorGalleries = {};
         if (product.colors) {
             product.colors.forEach(c => {
                 const imgs = (c.images && c.images.length > 0) ? c.images : (c.image ? [c.image] : []);
-                if (c.name) colorGalleries[c.name] = imgs;
+                if (c.name) window.__colorGalleries[c.name] = imgs;
             });
         }
 
-        // switchColorGallery: rebuilds thumbnail strip when user picks a color
-        const switchColorGallery = (colorName, fallbackImg) => {
-            const imgs = colorGalleries[colorName] || (fallbackImg ? [fallbackImg] : []);
-            if (!imgs.length) return;
+        // switchColorGallery: rebuilds thumbnail strip and updates main image when user picks a color
+        window.switchColorGallery = (colorName, fallbackImg) => {
+            const galleries = window.__colorGalleries || {};
+            const imgs = (galleries[colorName] && galleries[colorName].length > 0)
+                ? galleries[colorName]
+                : (fallbackImg ? [fallbackImg] : []);
+            
+            const mi = document.getElementById('main-product-img');
+            if (mi && (imgs[0] || fallbackImg)) {
+                mi.src = imgs[0] || fallbackImg;
+            }
+
             const tc = document.getElementById('dyn-thumbs');
-            if (tc) {
+            if (tc && imgs.length > 0) {
                 tc.innerHTML = imgs.map((img, i) => `
                     <div class="modal-thumb ${i === 0 ? 'active' : ''}" data-img="${img}">
                         <img src="${img}" alt="Фото ${i + 1}" loading="lazy">
                     </div>
                 `).join('');
             }
-            const mi = document.getElementById('main-product-img');
-            if (mi) mi.src = imgs[0];
         };
 
         let allImages = [];
@@ -724,7 +730,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 // Rebuild gallery for selected color (per-color images)
-                switchColorGallery(newColor, newImg);
+                if (typeof window.switchColorGallery === 'function') {
+                    window.switchColorGallery(newColor, newImg);
+                } else {
+                    const mi = document.getElementById('main-product-img');
+                    if (mi && newImg) mi.src = newImg;
+                }
             }
 
             // Grouped Variant Redirect
