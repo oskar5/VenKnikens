@@ -1180,10 +1180,18 @@
                         <input type="file" class="color-file-input" accept="image/*" style="display:none;">
                         <button type="button" class="btn btn-danger btn-sm remove-item" style="height:44px;"><span class="iconify" data-icon="material-symbols:close"></span></button>
                     </div>
-                    <div class="color-extra-wrap" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; padding:6px 10px; margin-top:2px;">
-                        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:4px;">
-                            <span style="font-size:11px; font-weight:600; color:#475569;">Додаткові фото цього кольору (для галереї):</span>
-                            <button type="button" class="btn btn-outline btn-sm add-color-extra-btn" style="font-size:11px; padding:2px 8px; height:24px;">+ Додати фото</button>
+                    <div class="color-extra-wrap" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:6px; padding:8px 10px; margin-top:4px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+                            <span style="font-size:12px; font-weight:600; color:#475569;">Додаткові фото цього кольору (для галереї):</span>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <button type="button" class="btn btn-outline btn-sm upload-color-extra-btn" style="font-size:11px; padding:3px 10px; height:26px; display:inline-flex; align-items:center; gap:4px;" title="Вибрати фото з комп'ютера">
+                                    <span class="iconify" data-icon="material-symbols:upload" style="font-size:15px;"></span> Додати фото
+                                </button>
+                                <input type="file" class="extra-file-input-header" accept="image/*" multiple style="display:none;">
+                                <button type="button" class="btn btn-outline btn-sm add-color-extra-url-btn" style="font-size:11px; padding:3px 10px; height:26px; display:inline-flex; align-items:center; gap:4px;" title="Додати рядок для посилання">
+                                    <span class="iconify" data-icon="material-symbols:link" style="font-size:15px;"></span> Додати посилання
+                                </button>
+                            </div>
                         </div>
                         <div class="color-extra-list" style="display:flex; flex-direction:column; gap:6px;"></div>
                     </div>
@@ -1202,52 +1210,26 @@
                     const row = document.createElement('div');
                     row.style.cssText = 'display:flex; align-items:center; gap:6px;';
                     row.innerHTML = `
-                        <img src="${val || ''}" class="color-preview ${val ? 'visible' : ''}" alt="" style="width:34px; height:34px; border-radius:4px; object-fit:cover; border:1px solid #e2e8f0;">
-                        <input type="text" class="color-extra-img" placeholder="URL додаткового фото" value="${val}" style="flex:1; font-size:12px; padding:5px 8px;">
-                        <button type="button" class="btn btn-outline btn-sm upload-extra-btn" title="Завантажити" style="padding:4px 8px; height:32px;">
-                            <span class="iconify" data-icon="material-symbols:upload" style="font-size:14px;"></span>
-                        </button>
-                        <input type="file" class="extra-file-input" accept="image/*" style="display:none;">
-                        <button type="button" class="btn btn-danger btn-sm remove-extra-btn" style="padding:4px 8px; height:32px;" title="Видалити">
+                        <img src="${val || ''}" class="color-preview ${val ? 'visible' : ''}" alt="" style="width:34px; height:34px; border-radius:4px; object-fit:cover; border:1px solid #e2e8f0; flex-shrink:0;">
+                        <input type="text" class="color-extra-img" placeholder="Вставте посилання на фото (URL)" value="${val}" style="flex:1; font-size:12px; padding:6px 10px; border:1px solid #cbd5e1; border-radius:6px;">
+                        <button type="button" class="btn btn-danger btn-sm remove-extra-btn" style="padding:4px 8px; height:32px; flex-shrink:0;" title="Видалити">
                             <span class="iconify" data-icon="material-symbols:close" style="font-size:14px;"></span>
                         </button>
                     `;
                     const extraInp = row.querySelector('.color-extra-img');
                     const extraPrev = row.querySelector('.color-preview');
                     extraInp.addEventListener('input', () => {
-                        if (extraInp.value) { extraPrev.src = extraInp.value; extraPrev.classList.add('visible'); }
-                        else { extraPrev.classList.remove('visible'); }
-                    });
-
-                    const fileIn = row.querySelector('.extra-file-input');
-                    row.querySelector('.upload-extra-btn').addEventListener('click', () => fileIn.click());
-                    fileIn.addEventListener('change', async () => {
-                        const file = fileIn.files[0];
-                        if (!file) return;
-                        const formData = new FormData();
-                        formData.append('image', file);
-                        try {
-                            const res = await fetch('/api/upload', {
-                                method: 'POST',
-                                headers: { 'x-admin-password': adminPwd },
-                                body: formData
-                            }).then(handle401);
-                            const data = await res.json();
-                            if (data.success) {
-                                extraInp.value = data.url;
-                                extraPrev.src = data.url;
-                                extraPrev.classList.add('visible');
-                                showToast('✅ Додаткове фото завантажено!');
-                            } else {
-                                showToast('❌ ' + data.error, 'error');
-                            }
-                        } catch (err) {
-                            showToast('❌ Помилка завантаження', 'error');
+                        if (extraInp.value.trim()) {
+                            extraPrev.src = extraInp.value.trim();
+                            extraPrev.classList.add('visible');
+                        } else {
+                            extraPrev.classList.remove('visible');
                         }
                     });
 
                     row.querySelector('.remove-extra-btn').addEventListener('click', () => row.remove());
                     extraList.appendChild(row);
+                    return { row, extraInp, extraPrev };
                 };
 
                 // Populate existing extra images (excluding the primary one which is already in color-img)
@@ -1259,7 +1241,49 @@
                     });
                 }
 
-                div.querySelector('.add-color-extra-btn').addEventListener('click', () => addExtraInput(''));
+                // Button: upload photo(s) from computer (opens file explorer, can pick multiple)
+                const uploadHeaderBtn = div.querySelector('.upload-color-extra-btn');
+                const fileInputHeader = div.querySelector('.extra-file-input-header');
+                uploadHeaderBtn.addEventListener('click', () => fileInputHeader.click());
+                fileInputHeader.addEventListener('change', async () => {
+                    const files = Array.from(fileInputHeader.files || []);
+                    if (!files.length) return;
+
+                    showToast(`⏳ Завантаження ${files.length} фото...`);
+                    let uploadedCount = 0;
+
+                    for (const file of files) {
+                        const formData = new FormData();
+                        formData.append('image', file);
+                        try {
+                            const res = await fetch('/api/upload', {
+                                method: 'POST',
+                                headers: { 'x-admin-password': adminPwd },
+                                body: formData
+                            }).then(handle401);
+                            const data = await res.json();
+                            if (data.success && data.url) {
+                                addExtraInput(data.url);
+                                uploadedCount++;
+                            } else {
+                                showToast(`❌ Помилка: ${data.error || 'не вдалося завантажити файл'}`, 'error');
+                            }
+                        } catch (err) {
+                            showToast('❌ Помилка сервера при завантаженні', 'error');
+                        }
+                    }
+
+                    if (uploadedCount > 0) {
+                        showToast(`✅ Додано фото: ${uploadedCount}`);
+                    }
+                    fileInputHeader.value = '';
+                });
+
+                // Button: add blank link input field
+                div.querySelector('.add-color-extra-url-btn').addEventListener('click', () => {
+                    const item = addExtraInput('');
+                    item.extraInp.focus();
+                });
 
                 return div;
             };
