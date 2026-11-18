@@ -454,6 +454,31 @@ document.addEventListener('DOMContentLoaded', () => {
             variants = dataToUse.filter(p => p.groupId === product.groupId && p.id !== product.id && !p.hidden);
         }
 
+        // Build per-color gallery map
+        const colorGalleries = {};
+        if (product.colors) {
+            product.colors.forEach(c => {
+                const imgs = (c.images && c.images.length > 0) ? c.images : (c.image ? [c.image] : []);
+                if (c.name) colorGalleries[c.name] = imgs;
+            });
+        }
+
+        // switchColorGallery: rebuilds thumbnail strip when user picks a color
+        const switchColorGallery = (colorName, fallbackImg) => {
+            const imgs = colorGalleries[colorName] || (fallbackImg ? [fallbackImg] : []);
+            if (!imgs.length) return;
+            const tc = document.getElementById('dyn-thumbs');
+            if (tc) {
+                tc.innerHTML = imgs.map((img, i) => `
+                    <div class="modal-thumb ${i === 0 ? 'active' : ''}" data-img="${img}">
+                        <img src="${img}" alt="Фото ${i + 1}" loading="lazy">
+                    </div>
+                `).join('');
+            }
+            const mi = document.getElementById('main-product-img');
+            if (mi) mi.src = imgs[0];
+        };
+
         let allImages = [];
         
         if ((product.colors && product.colors.length > 0) || variants.length > 0) {
@@ -491,7 +516,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             </li>
                         `;
                     }
-                    if (c.image) allImages.push(c.image);
+                    // Initial gallery: use first color's full images array
+                    if (idx === 0) {
+                        const imgs = (c.images && c.images.length > 0) ? c.images : (c.image ? [c.image] : []);
+                        allImages = imgs;
+                    }
                 });
             }
 
@@ -694,17 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     head.classList.remove('active');
                 }
                 
-                // Update main large image
-                const mainImg = document.getElementById('main-product-img');
-                if (mainImg) mainImg.src = newImg;
-                
-                // Update active thumbnail in left gallery
-                document.querySelectorAll('.modal-thumb').forEach(t => {
-                    if (t.getAttribute('data-img') === newImg) {
-                        document.querySelectorAll('.modal-thumb').forEach(x => x.classList.remove('active'));
-                        t.classList.add('active');
-                    }
-                });
+                // Rebuild gallery for selected color (per-color images)
+                switchColorGallery(newColor, newImg);
             }
 
             // Grouped Variant Redirect
