@@ -68,6 +68,7 @@ app.get('/sitemap.xml', async (req, res) => {
 
     const staticUrls = [
         { loc: `${BASE}/`,                          priority: '1.0', freq: 'weekly'  },
+        { loc: `${BASE}/how-to-order.html`,          priority: '0.5', freq: 'monthly' },
         { loc: `${BASE}/privacy-policy.html`,       priority: '0.3', freq: 'monthly' },
         { loc: `${BASE}/shipping-returns.html`,     priority: '0.3', freq: 'monthly' },
         { loc: `${BASE}/terms-of-use.html`,         priority: '0.3', freq: 'monthly' },

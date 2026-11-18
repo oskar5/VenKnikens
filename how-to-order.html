@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Як замовити | VenKnikens — Покрокова інструкція з оформлення замовлення</title>
+    <meta name="description"
+        content="Як замовити товар в інтернет-магазині VenKnikens. Простий покроковий процес: оберіть товар, оформіть замовлення, отримайте доставку Новою Поштою або Укрпоштою. Оплата при отриманні.">
+
+    <!-- Open Graph (Telegram, Viber, Facebook) -->
+    <meta property="og:site_name" content="VenKnikens">
+    <meta property="og:type" content="article">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:title" content="Як замовити | VenKnikens">
+    <meta property="og:description"
+        content="Простий покроковий процес замовлення в інтернет-магазині VenKnikens. Доставка Новою Поштою та Укрпоштою. Оплата при отриманні.">
+    <meta property="og:url" content="https://venknikens.vercel.app/how-to-order.html">
+    <meta property="og:image" content="https://venknikens.vercel.app/img/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Як замовити | VenKnikens">
+    <meta name="twitter:description"
+        content="Простий покроковий процес замовлення в інтернет-магазині VenKnikens. Доставка Новою Поштою та Укрпоштою. Оплата при отриманні.">
+    <meta name="twitter:image" content="https://venknikens.vercel.app/img/og-image.png">
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="canonical" href="https://venknikens.vercel.app/how-to-order.html">
+    <link rel="stylesheet" href="css/style.css?v=1.1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Roboto:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+
+    <style>
+        .how-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 32px;
+            padding: 24px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+        .how-step-num {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #c9a84c, #e8c96a);
+            color: #fff;
+            font-size: 22px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Poppins', sans-serif;
+        }
+        .how-step-content h3 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #29364a;
+        }
+        .how-step-content p {
+            margin: 0;
+            color: #4a5568;
+            line-height: 1.7;
+        }
+        .info-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 20px 24px;
+            border-radius: 14px;
+            margin-bottom: 16px;
+        }
+        .info-card.delivery { background: #eef6ff; }
+        .info-card.payment { background: #f0fdf4; }
+        .info-card-icon {
+            font-size: 28px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .info-card h3 {
+            margin: 0 0 6px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #29364a;
+        }
+        .info-card p {
+            margin: 0;
+            color: #4a5568;
+            line-height: 1.65;
+            font-size: 15px;
+        }
+        .contact-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid #e9eef5;
+            font-size: 16px;
+            color: #29364a;
+            text-decoration: none;
+        }
+        .contact-row:last-child { border-bottom: none; }
+        .contact-row span.iconify { font-size: 22px; color: #c9a84c; flex-shrink: 0; }
+        a.contact-row:hover { color: #c9a84c; }
+
+        @media (max-width: 600px) {
+            .how-step { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span class="logo-name">VenKnikens</span>
+            </a>
+
+            <nav id="mobile-menu">
+                <ul>
+                    <li><a href="index.html#home">Головна</a></li>
+                    <li><a href="index.html#catalog">Каталог</a></li>
+                    <li><a href="how-to-order.html">Як замовити</a></li>
+                    <li><a href="tel:+380630418661">Контакти</a></li>
+                </ul>
+            </nav>
+
+            <div class="header-right">
+                <div class="header-socials">
+                    <a href="https://t.me/VenKnikens" target="_blank" aria-label="Telegram">
+                        <span class="iconify" data-icon="fa-brands:telegram-plane"></span>
+                    </a>
+                    <a href="viber://chat?number=%2B380630418661" target="_blank" aria-label="Viber">
+                        <span class="iconify" data-icon="fa-brands:viber"></span>
+                    </a>
+                </div>
+
+                <div class="header-contacts">
+                    <a href="tel:+380630418661" class="phone-link">+38 (063) 041 8661</a>
+                </div>
+                <button class="cart-btn" id="cart-toggle" aria-label="Кошик">
+                    <span class="iconify" data-icon="material-symbols:shopping-cart-outline"></span>
+                    <span class="cart-count" id="cart-count">0</span>
+                </button>
+                <button class="mobile-menu-btn" id="menu-toggle" aria-label="Toggle navigation menu">
+                    <span class="iconify" data-icon="material-symbols:menu-rounded" data-width="28"
+                        data-height="28"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main style="padding-top: 100px; padding-bottom: 80px; background: #fdfdfd; color: #29364a;">
+        <div class="container" style="max-width: 860px;">
+            <h1 style="margin-bottom: 12px; font-size: 32px; font-weight: 700;">Як замовити</h1>
+            <p style="margin-bottom: 40px; color: #64748b; font-size: 16px;">Оформити замовлення дуже просто — всього 5 кроків!</p>
+
+            <!-- Steps -->
+            <div class="how-step">
+                <div class="how-step-num">1</div>
+                <div class="how-step-content">
+                    <h3>Оберіть товар у каталозі</h3>
+                    <p>Перейдіть до <a href="index.html#catalog" style="color:#c9a84c; font-weight:600;">каталогу товарів</a>, оберіть категорію та знайдіть товар, який вас цікавить. Натисніть на картку товару, щоб переглянути детальний опис, фото та характеристики.</p>
+                </div>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step-num">2</div>
+                <div class="how-step-content">
+                    <h3>Натисніть «Додати до замовлення»</h3>
+                    <p>На сторінці товару виберіть потрібний колір або варіант (якщо є) та натисніть кнопку <strong>«Додати до замовлення»</strong>. Товар буде додано до вашого кошика.</p>
+                </div>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step-num">3</div>
+                <div class="how-step-content">
+                    <h3>Перейдіть до кошика</h3>
+                    <p>Натисніть на іконку кошика 🛒 у правому верхньому куті. Перевірте обраний товар та кількість. Коли все готово — натисніть <strong>«Оформити замовлення»</strong>.</p>
+                </div>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step-num">4</div>
+                <div class="how-step-content">
+                    <h3>Введіть ваші дані</h3>
+                    <p>Заповніть форму: ваше ім'я та прізвище, номер телефону, населений пункт та відділення Нової Пошти або Укрпошти (або адресу для доставки кур'єром). Можна також залишити коментар до замовлення.</p>
+                </div>
+            </div>
+
+            <div class="how-step">
+                <div class="how-step-num">5</div>
+                <div class="how-step-content">
+                    <h3>Підтвердіть замовлення</h3>
+                    <p>Натисніть <strong>«Підтвердити замовлення»</strong>. Ми отримаємо ваше замовлення та зв'яжемося з вами для підтвердження деталей. Зазвичай передзвонюємо протягом кількох годин у робочий час.</p>
+                </div>
+            </div>
+
+            <!-- Delivery -->
+            <h2 style="margin-top: 50px; margin-bottom: 20px; font-size: 24px; font-weight: 700;">🚚 Доставка</h2>
+
+            <div class="info-card delivery">
+                <div class="info-card-icon">📦</div>
+                <div>
+                    <h3>Нова Пошта</h3>
+                    <p>Доставка на будь-яке відділення або поштомат по всій Україні. Термін доставки — 1–3 робочі дні залежно від регіону.</p>
+                </div>
+            </div>
+
+            <div class="info-card delivery">
+                <div class="info-card-icon">✉️</div>
+                <div>
+                    <h3>Укрпошта</h3>
+                    <p>Доставка на відділення Укрпошти. Підходить для замовників у містах та селах, де немає Нової Пошти.</p>
+                </div>
+            </div>
+
+            <div class="info-card delivery">
+                <div class="info-card-icon">🏠</div>
+                <div>
+                    <h3>Кур'єр (адресна доставка)</h3>
+                    <p>Доставка кур'єром Нової Пошти або Укрпошти безпосередньо до вашої адреси. Деталі та вартість уточнюйте при оформленні.</p>
+                </div>
+            </div>
+
+            <!-- Payment -->
+            <h2 style="margin-top: 50px; margin-bottom: 20px; font-size: 24px; font-weight: 700;">💳 Оплата</h2>
+
+            <div class="info-card payment">
+                <div class="info-card-icon">💰</div>
+                <div>
+                    <h3>Оплата при отриманні (накладений платіж)</h3>
+                    <p>Ви оплачуєте замовлення безпосередньо на пошті при отриманні посилки. Передоплата не потрібна — ви платите лише тоді, коли тримаєте товар у руках. Комісію за накладений платіж стягує поштова служба.</p>
+                </div>
+            </div>
+
+            <!-- Contacts -->
+            <h2 style="margin-top: 50px; margin-bottom: 20px; font-size: 24px; font-weight: 700;">📞 Маєте питання?</h2>
+
+            <div style="background: #fff; border-radius: 16px; padding: 8px 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                <a href="https://t.me/VenKnikens" target="_blank" class="contact-row">
+                    <span class="iconify" data-icon="fa-brands:telegram-plane"></span>
+                    Написати в Telegram
+                </a>
+                <a href="viber://chat?number=%2B380630418661" target="_blank" class="contact-row">
+                    <span class="iconify" data-icon="fa-brands:viber"></span>
+                    Написати у Viber
+                </a>
+                <a href="tel:+380630418661" class="contact-row">
+                    <span class="iconify" data-icon="material-symbols:phone-outline"></span>
+                    +38 (063) 041 8661
+                </a>
+            </div>
+
+            <p style="margin-top: 24px; color: #64748b; font-size: 14px; text-align: center;">
+                Ми на зв'язку в будні з 9:00 до 20:00. Відповідаємо на повідомлення швидко 😊
+            </p>
+        </div>
+    </main>
+
+    <footer class="site-footer" id="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <!-- Col 1: Identity -->
+                <div class="footer-col footer-identity">
+                    <a href="index.html" class="logo">
+                        <span class="logo-name">VenKnikens</span>
+                    </a>
+                    <p class="copyright">Твій затишний простір корисних дрібниць</p>
+                </div>
+
+                <!-- Col 2: Contacts -->
+                <div class="footer-col">
+                    <h4>Контакти</h4>
+
+                    <div class="footer-socials" style="margin-bottom: 20px;">
+                        <a href="viber://chat?number=%2B380630418661" target="_blank" aria-label="Viber">
+                            <span class="iconify" data-icon="fa-brands:viber"></span>
+                        </a>
+                        <a href="https://t.me/VenKnikens" target="_blank" aria-label="Telegram">
+                            <span class="iconify" data-icon="ic:baseline-telegram"></span>
+                        </a>
+                    </div>
+
+                    <a href="tel:+380630418661" class="contact-item">+38 (063) 041 8661</a>
+
+                    <a href="mailto:raisamellnichenko@gmail.com" class="contact-item"
+                        style="display: flex; align-items: center; gap: 8px; margin-top: 20px;">
+                        <span class="iconify" data-icon="material-symbols:mail-outline"></span>
+                        raisamellnichenko@gmail.com
+                    </a>
+                </div>
+
+                <!-- Col 3: Company -->
+                <div class="footer-col">
+                    <h4>Компанія</h4>
+                    <ul>
+                        <li><a href="how-to-order.html">Як замовити</a></li>
+                        <li><a href="privacy-policy.html">Політика конфіденційності</a></li>
+                        <li><a href="shipping-returns.html">Умови доставки та оплати</a></li>
+                        <li><a href="terms-of-use.html">Угода користувача</a></li>
+                    </ul>
+                </div>
+
+                <!-- Col 4: Menu -->
+                <div class="footer-col">
+                    <h4>Меню</h4>
+                    <ul>
+                        <li><a href="index.html#home">Головна</a></li>
+                        <li><a href="index.html#catalog">Каталог</a></li>
+                        <li><a href="how-to-order.html">Як замовити</a></li>
+                        <li><a href="tel:+380630418661">Контакти</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <div class="cart-sidebar-overlay" id="cart-overlay"></div>
+    <div class="cart-sidebar" id="cart-sidebar">
+        <div class="cart-header">
+            <h2>Кошик</h2>
+            <button class="close-cart" id="close-cart">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Items injected by JS -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Всього:</span>
+                <span id="cart-total-price">0 грн.</span>
+            </div>
+            <a href="#" class="checkout-btn"
+                style="display:block; text-align:center; text-decoration:none;"
+                id="open-checkout-from-cart">Оформити замовлення</a>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="modal-overlay">
+        <div class="modal-container checkout-container">
+            <button class="modal-close" id="close-checkout" aria-label="Close modal">&times;</button>
+            <div class="checkout-form-wrapper">
+                <h3>Оформлення замовлення</h3>
+                <p>Останній крок до покупки! Заповніть ваші дані.</p>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label for="order-name">Ім'я та Прізвище</label>
+                        <input type="text" id="order-name" name="name" placeholder="Введіть ваше ім'я" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="order-phone">Номер телефону</label>
+                        <input type="tel" id="order-phone" name="phone" placeholder="+38 (___) ___ ____" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="order-comment">Коментар до замовлення</label>
+                        <textarea id="order-comment" name="comment" rows="2" placeholder="Напишіть коментар або уточнення (за бажанням)..." style="width:100%; padding:10px 14px; border:1px solid #cbd5e1; border-radius:10px; font-family:inherit; font-size:14px; box-sizing:border-box; height:48px; min-height:44px; resize:vertical;"></textarea>
+                    </div>
+                    <div class="checkout-summary" id="order-summary-list"></div>
+                    <button type="submit" class="btn checkout-submit-btn" id="submit-order">
+                        ПІДТВЕРДИТИ ЗАМОВЛЕННЯ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/products.js"></script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
