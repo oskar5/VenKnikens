@@ -24,7 +24,7 @@
         content="Купити якісні товари для дому, туризму та відпочинку в інтернет-магазині VenKnikens.">
     <meta name="twitter:image" content="https://venknikens.vercel.app/img/og-image.png">
 
-    <link rel="stylesheet" href="css/style.css?v=1.1.0">
+    <link rel="stylesheet" href="css/style.css?v=1.1.2">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <!-- canonical is set dynamically by script.js per product id -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -108,12 +108,18 @@
                         <!-- Product Purchase Info -->
                         <div class="modal-info">
                             <h1 class="m-product-title" id="dyn-title">Завантаження...</h1>
-                            <span class="m-product-sku" id="dyn-sku">Артикул: ...</span>
-                            <div id="dyn-avail" class="m-product-availability"></div>
+                            <div class="m-product-meta-row">
+                                <span class="m-product-sku" id="dyn-sku">Артикул: ...</span>
+                                <div id="dyn-avail" class="m-product-availability"></div>
+                            </div>
 
-                            <div class="m-product-pricing">
+                            <div class="m-product-pricing" style="align-items: center; flex-wrap: wrap;">
                                 <span class="m-current-price" id="dyn-price">... грн.</span>
                                 <span class="m-old-price" id="dyn-old-price">... грн.</span>
+                                <button type="button" class="btn-share" id="btn-share-product" title="Поділитися товаром" aria-label="Поділитися товаром">
+                                    <span class="iconify" data-icon="material-symbols:share-outline"></span>
+                                    <span class="btn-share-text">Поділитися</span>
+                                </button>
                             </div>
 
                             <!-- Color Selection (Will show static colors for now, or hide if none) -->
@@ -448,7 +454,7 @@
     </div>
 
     <script src="js/products.js?v=1.0.2"></script>
-    <script src="js/script.js?v=1.1.1"></script>
+    <script src="js/script.js?v=1.1.2"></script>
 
 </body>
 

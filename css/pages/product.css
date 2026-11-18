@@ -272,3 +272,82 @@
     cursor: not-allowed;
     opacity: 0.8;
 }
+
+/* Product Meta Row (SKU + Availability) */
+.m-product-meta-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.m-product-meta-row .m-product-sku {
+    margin-bottom: 0;
+}
+
+.m-product-meta-row .m-product-availability {
+    margin: 0;
+}
+
+/* Share Button */
+.btn-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    background: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    text-decoration: none;
+    margin-left: auto;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.btn-share:hover {
+    background: #eef2f6;
+    color: #1e293b;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
+}
+
+.btn-share:active {
+    transform: translateY(0);
+}
+
+.btn-share .iconify {
+    font-size: 18px;
+    color: #c9a84c;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.btn-share:hover .iconify {
+    transform: scale(1.12);
+}
+
+.btn-share.copied {
+    background: #ecfdf5 !important;
+    color: #059669 !important;
+    border-color: #6ee7b7 !important;
+}
+
+.btn-share.copied .iconify {
+    color: #059669 !important;
+}
+
+@media (max-width: 600px) {
+    .btn-share {
+        padding: 6px 12px;
+        font-size: 12px;
+        min-height: 36px;
+    }
+}

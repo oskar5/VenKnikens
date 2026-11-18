@@ -784,6 +784,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Share Button Click
+            const shareBtn = e.target.closest('#btn-share-product, .btn-share');
+            if (shareBtn) {
+                e.preventDefault();
+                const title = document.getElementById('dyn-title')?.textContent.trim() || document.title;
+                const price = document.getElementById('dyn-price')?.textContent.trim() || '';
+                const cleanUrl = window.location.href.split('#')[0];
+                const shareText = `${title}${price ? ` — ${price}` : ''} в інтернет-магазині VenKnikens:`;
+
+                const shareData = {
+                    title: `${title} | VenKnikens`,
+                    text: shareText,
+                    url: cleanUrl
+                };
+
+                const markCopied = () => {
+                    const origHtml = shareBtn.innerHTML;
+                    shareBtn.classList.add('copied');
+                    shareBtn.innerHTML = '<span class="iconify" data-icon="material-symbols:check-rounded"></span><span class="btn-share-text">Скопійовано!</span>';
+                    setTimeout(() => {
+                        shareBtn.classList.remove('copied');
+                        shareBtn.innerHTML = origHtml;
+                    }, 2500);
+                };
+
+                if (navigator.share) {
+                    navigator.share(shareData).catch((err) => {
+                        if (err.name !== 'AbortError') markCopied();
+                    });
+                } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(cleanUrl).then(markCopied).catch(markCopied);
+                } else {
+                    try {
+                        const input = document.createElement('textarea');
+                        input.value = cleanUrl;
+                        input.style.position = 'fixed';
+                        input.style.opacity = '0';
+                        document.body.appendChild(input);
+                        input.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(input);
+                        markCopied();
+                    } catch (_) {}
+                }
+            }
+
             // Accordion Toggle
             const accordionHeader = e.target.closest('.accordion-header');
             if (accordionHeader) {
