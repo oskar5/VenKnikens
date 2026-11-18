@@ -109,7 +109,9 @@ app.get('/sitemap.xml', async (req, res) => {
 // ==============================
 app.get(['/product.html', '/product'], async (req, res, next) => {
     const productId = req.query.id;
-    const filePath = path.join(__dirname, '..', 'product.html');
+    const templatePath = path.join(__dirname, '..', 'product_template.html');
+    const fallbackPath = path.join(__dirname, '..', 'product.html');
+    const filePath = fs.existsSync(templatePath) ? templatePath : fallbackPath;
 
     if (!fs.existsSync(filePath)) return next();
     let html = fs.readFileSync(filePath, 'utf8');
