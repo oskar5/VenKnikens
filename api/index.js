@@ -266,8 +266,8 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
             .replace(/>/g, '&gt;');
 
         let message = `📦 <b>НОВЕ ЗАМОВЛЕННЯ!</b>\n\n`;
-        message += `👤 <b>Клієнт:</b> ${esc(name)}\n`;
-        message += `📞 <b>Телефон:</b> ${esc(phone)}\n`;
+        message += `👤 <b>Клієнт:</b> <code>${esc(name)}</code>\n`;
+        message += `📞 <b>Телефон:</b> <code>${esc(phone)}</code>\n`;
 
         if (comment && String(comment).trim()) {
             message += `💬 <b>Коментар:</b> ${esc(String(comment).trim())}\n`;
@@ -276,13 +276,13 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
         if (delivery) {
             message += `\n🚚 <b>Спосіб доставки:</b> ${esc(delivery.label || delivery.type || 'Нова Пошта')}\n`;
             if (delivery.city) {
-                message += `📍 <b>Населений пункт:</b> ${esc(delivery.city)}\n`;
+                message += `📍 <b>Населений пункт:</b> <code>${esc(delivery.city)}</code>\n`;
             }
             if (delivery.branch) {
-                message += `🏢 <b>Відділення:</b> ${esc(delivery.branch)}\n`;
+                message += `🏢 <b>Відділення:</b> <code>${esc(delivery.branch)}</code>\n`;
             }
             if (delivery.courier_address) {
-                message += `🏠 <b>Адреса кур'єра:</b> ${esc(delivery.courier_address)}\n`;
+                message += `🏠 <b>Адреса кур'єра:</b> <code>${esc(delivery.courier_address)}</code>\n`;
             }
         }
 
