@@ -609,6 +609,89 @@ document.addEventListener('DOMContentLoaded', () => {
                 specsContainer.style.display = specsHtml.trim() ? 'block' : 'none';
             }
         }
+
+        // Dynamic Delivery Accordion update based on product.delivery
+        const deliveryContainer = document.getElementById('dyn-delivery-info');
+        if (deliveryContainer) {
+            const del = product.delivery || {};
+            const isOnlyCargo = (del.np_cargo === true && !del.np) || del.cargo_only === true;
+            const hasNP = del.np !== false || del.np_cargo === true;
+            const hasCourier = del.np_courier !== false;
+            const hasUkr = del.ukrpost === true;
+
+            let delHtml = '';
+
+            // 1. Nova Poshta
+            if (isOnlyCargo) {
+                delHtml += `
+                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                        <span style="font-size:20px; line-height:1.2;">🏭</span>
+                        <div>
+                            <strong>Нова Пошта (тільки вантажні відділення)</strong>
+                            <div style="font-size:13px; color:#64748b;">Великогабаритний товар — відправка на вантажні відділення (до 1000 кг). Звичайні відділення до 30 кг недоступні.</div>
+                        </div>
+                    </div>`;
+            } else if (hasNP) {
+                delHtml += `
+                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                        <span style="font-size:20px; line-height:1.2;">📦</span>
+                        <div>
+                            <strong>Нова Пошта (відділення та поштомати)</strong>
+                            <div style="font-size:13px; color:#64748b;">Будь-яке стандартне відділення або поштомат по всій Україні (1–3 дні)</div>
+                        </div>
+                    </div>`;
+            }
+
+            // 2. Courier
+            if (hasCourier) {
+                delHtml += `
+                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                        <span style="font-size:20px; line-height:1.2;">🚗</span>
+                        <div>
+                            <strong>Кур'єр Нова Пошта</strong>
+                            <div style="font-size:13px; color:#64748b;">Адресна доставка кур'єром безпосередньо до дверей</div>
+                        </div>
+                    </div>`;
+            }
+
+            // 3. Ukrposhta
+            if (hasUkr) {
+                delHtml += `
+                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                        <span style="font-size:20px; line-height:1.2;">🇺🇦</span>
+                        <div>
+                            <strong>Укрпошта</strong>
+                            <div style="font-size:13px; color:#64748b;">Доставка у відділення за поштовим індексом</div>
+                        </div>
+                    </div>`;
+            } else {
+                delHtml += `
+                    <div style="display:flex; align-items:flex-start; gap:10px;">
+                        <span style="font-size:20px; line-height:1.2;">ℹ️</span>
+                        <div>
+                            <strong style="color:#64748b;">Укрпошта: недоступна для цього товару</strong>
+                            <div style="font-size:12px; color:#94a3b8;">Через обмеження ваги, габаритів або вимоги до пакування перевізника</div>
+                        </div>
+                    </div>`;
+            }
+
+            // 4. Payment
+            delHtml += `
+                <div style="display:flex; align-items:flex-start; gap:10px; margin-top:2px;">
+                    <span style="font-size:20px; line-height:1.2;">💰</span>
+                    <div>
+                        <strong>Оплата при отриманні</strong> (накладений платіж)
+                        <div style="font-size:13px; color:#64748b;">Без передоплати — перевіряєте товар на пошті перед оплатою</div>
+                    </div>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px; margin-top:2px;">
+                    <span style="font-size:20px;">📞</span>
+                    <span>Питання? <a href="https://t.me/VenKnikens" target="_blank" style="color:#c9a84c; font-weight:600;">Telegram</a> або <a href="viber://chat?number=%2B380630418661" style="color:#c9a84c; font-weight:600;">Viber</a></span>
+                </div>
+            `;
+
+            deliveryContainer.innerHTML = delHtml;
+        }
     };
 
     // --- 3. Product Page Controllers ---
