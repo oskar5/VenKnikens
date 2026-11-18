@@ -258,7 +258,7 @@ const TG_CHAT_ID = process.env.TG_CHAT_ID;
 
 app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
     try {
-        const { name, phone, items, total, delivery } = req.body;
+        const { name, phone, items, total, delivery, comment } = req.body;
 
         const esc = (str) => String(str || '')
             .replace(/&/g, '&amp;')
@@ -268,6 +268,10 @@ app.post('/api/checkout', checkoutRateLimiter, async (req, res) => {
         let message = `📦 <b>НОВЕ ЗАМОВЛЕННЯ!</b>\n\n`;
         message += `👤 <b>Клієнт:</b> ${esc(name)}\n`;
         message += `📞 <b>Телефон:</b> ${esc(phone)}\n`;
+
+        if (comment && String(comment).trim()) {
+            message += `💬 <b>Коментар:</b> ${esc(String(comment).trim())}\n`;
+        }
 
         if (delivery) {
             message += `\n🚚 <b>Спосіб доставки:</b> ${esc(delivery.label || delivery.type || 'Нова Пошта')}\n`;

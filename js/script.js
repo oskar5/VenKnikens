@@ -1388,10 +1388,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const ukrpostVal = document.getElementById('order-ukrpost-branch')?.value.trim() || formData.get('ukrpost_branch') || '';
 
             const branchVal = deliveryType === 'np_cargo' ? npCargoVal : (deliveryType === 'ukrpost' ? ukrpostVal : npBranchVal);
+            const commentVal = document.getElementById('order-comment')?.value.trim() || formData.get('comment') || '';
 
             const orderData = {
                 name: formData.get('name') || document.getElementById('order-name')?.value.trim(),
                 phone: formData.get('phone') || document.getElementById('order-phone')?.value.trim(),
+                comment: commentVal,
                 delivery: {
                     type: deliveryType,
                     label: deliveryLabels[deliveryType] || deliveryType,
