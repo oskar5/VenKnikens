@@ -769,6 +769,8 @@ async function scrapeSupplierProduct(targetUrl) {
     }
 
     const $ = cheerio.load(html);
+    const $clean = cheerio.load(html);
+    $clean('script, style, noscript, iframe, svg').remove();
 
     // 1. JSON-LD
     let jsonLdData = null;
@@ -786,57 +788,142 @@ async function scrapeSupplierProduct(targetUrl) {
     title = (title || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
     title = title.replace(/\s*[-–|]\s*(?:купити|купить|інтернет-магазин|интернет-магазин|ціна|цена|відгуки|отзывы|оптом).*$/i, '').trim();
 
-    // 3. SKU
-    let sku = (jsonLdData && jsonLdData.sku) || $('[itemprop="sku"]').text() || $('[itemprop="sku"]').attr('content') || '';
-    if (!sku) {
-        const bodyText = $('body').text();
-        const skuM = bodyText.match(/(?:Артикул|Код товара|Код товару|Арт\.|Код|SKU)[:\s#]*([a-zA-Z0-9_\-\.\/]+)/i);
-        if (skuM && skuM[1] && skuM[1].length < 30) sku = skuM[1].trim();
-    }
-    sku = (sku || '').trim();
+    // 3. Specs extraction early (helps with SKU and color)
+    const specs = [];
+    const addSpec = (key, val) => {
+        if (!key || !val || key === val) return;
+        key = key.replace(/[:\s]+$/, '').trim();
+        val = val.trim();
+        if (/наші пропозиції|наши предложения|хит|новинка|акция/i.test(key)) return;
+        if (key.length > 1 && key.length < 60 && val.length < 150 && !specs.some(s => s.key.toLowerCase() === key.toLowerCase())) {
+            specs.push({ key, val });
+        }
+    };
 
-    // 4. Price
+    $clean('table tr, dl, .b-product-info tr, .product-characteristics tr, .product-features tr, .table-specification tr').each((_, el) => {
+        let key = $clean(el).find('th, td:first-child, dt, .param-name, .name').first().text().trim();
+        let val = $clean(el).find('td:last-child, dd, .param-value, .val').first().text().trim();
+        addSpec(key, val);
+    });
+
+    $clean('.propertyTable, .property-row, .char-row, .product-spec-row, .specifications-item, .product-properties__item').each((_, el) => {
+        let key = $clean(el).find('.propertyName, .char-name, .spec-name, .name, dt').first().text().trim();
+        let val = $clean(el).find('.propertyValue, .char-value, .spec-value, .val, dd').first().text().trim();
+        addSpec(key, val);
+    });
+
+    // 4. Description
+    let descElem = $clean('#detailText, .changeDescription, #tab-description, .product-description, [itemprop="description"], .b-user-content, .product-about, #description, .detail-text, .product__description, #tab-1, #tab_description, .description-text').first();
+    let description = '';
+    if (descElem.length) {
+        descElem.find('script, style, iframe, img, a, h1, h2.heading').remove();
+        description = descElem.text().replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    description = description.replace(/(?:\+?38)?\s?\(?0\d{2}\)?\s?\d{3}[\s-]?\d{2}[\s-]?\d{2}/g, '').trim();
+
+    // If table/div specs are few, extract additional specs from description
+    if (description.includes('Характеристики:')) {
+        const parts = description.split(/Характеристики:/i);
+        if (parts[1]) {
+            const lines = parts[1].split('\n');
+            lines.forEach(line => {
+                line = line.replace(/^[-•*–\s]+/, '').trim();
+                const match = line.match(/^([^:–—-]+)[:–—\-]\s*(.+)$/);
+                if (match) {
+                    const k = match[1].trim();
+                    const v = match[2].trim();
+                    if (k.length > 2 && k.length < 50 && v.length < 150) {
+                        addSpec(k, v);
+                    }
+                }
+            });
+        }
+    }
+
+    // 5. SKU
+    let sku = '';
+    const skuSpec = specs.find(s => /^артикул$/i.test(s.key) || /^код$/i.test(s.key));
+    if (skuSpec) sku = skuSpec.val;
+
+    if (!sku) {
+        sku = (jsonLdData && jsonLdData.sku) || $clean('[itemprop="sku"]').text() || $clean('[itemprop="sku"]').attr('content') || '';
+    }
+    if (!sku) {
+        const skuSelectors = [
+            '.propertyName:contains("Артикул") + .propertyValue',
+            '.product-sku',
+            '.sku-value',
+            '.article-value',
+            '.product-code',
+            '.product__sku',
+            '.sku'
+        ];
+        for (const sel of skuSelectors) {
+            const val = $clean(sel).first().text().trim();
+            if (val && val.length < 50) {
+                sku = val;
+                break;
+            }
+        }
+    }
+    if (!sku) {
+        const bodyText = $clean('body').text().replace(/\s+/g, ' ');
+        const skuM = bodyText.match(/(?:Артикул|Код товара|Код товару|Арт\.)[:\s#]*([a-zA-Z0-9_\-\.\/]+(?:\s+[a-zA-Z0-9_\-\.\/]+)?)/i);
+        if (skuM && skuM[1] && skuM[1].length < 40) sku = skuM[1].trim();
+    }
+    sku = (sku || '').replace(/^[:\s#]+/, '').trim();
+
+    // 6. Price
     let price = 0;
     if (jsonLdData && jsonLdData.offers) {
         const off = Array.isArray(jsonLdData.offers) ? jsonLdData.offers[0] : jsonLdData.offers;
         if (off && off.price) price = parseInt(off.price) || 0;
     }
     if (!price) {
-        const pStr = $('[itemprop="price"]').attr('content') || $('[itemprop="price"]').text() || $('.product-price, .price, .current-price, .product__price').first().text();
+        const pStr = $clean('[itemprop="price"]').attr('content') || $clean('[itemprop="price"]').text() || $clean('.priceVal, .product-price, .price, .current-price, .product__price').first().text();
         const cleanP = (pStr || '').replace(/[^\d]/g, '');
         if (cleanP) price = parseInt(cleanP) || 0;
     }
 
-    // 5. Images
+    // 7. Images
     const images = [];
+    const targetHost = new URL(targetUrl).hostname;
     const addImg = (u) => {
         if (!u || typeof u !== 'string') return;
+        let trimmed = u.trim();
+        if (!trimmed) return;
+        trimmed = trimmed.replace(/^https?:\/\/\/+/, '/');
         try {
-            let fullUrl = new URL(u.trim(), targetUrl).href;
-            if (!fullUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i) && !fullUrl.includes('images') && !fullUrl.includes('products')) return;
-            if (fullUrl.includes('logo') || fullUrl.includes('icon') || fullUrl.includes('banner') || fullUrl.includes('cart') || fullUrl.includes('avatar')) return;
+            let parsed = new URL(trimmed, targetUrl);
+            if (!parsed.hostname.includes('.') || parsed.hostname === 'upload') {
+                parsed.hostname = targetHost;
+            }
+            let fullUrl = parsed.href;
+            if (!fullUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i) && !fullUrl.includes('images') && !fullUrl.includes('products') && !fullUrl.includes('iblock')) return;
+            if (fullUrl.includes('logo') || fullUrl.includes('icon') || fullUrl.includes('banner') || fullUrl.includes('cart') || fullUrl.includes('avatar') || fullUrl.includes('reviews')) return;
+
             // Upgrade resolution for known platforms
             fullUrl = fullUrl.replace(/\/\d+x\d+[^/]*\//, '/1024x1024l80mc0/');
             fullUrl = fullUrl.replace(/_w\d+_h\d+_/, '_w1024_h1024_');
+            if (fullUrl.includes('/upload/resize_cache/iblock/')) {
+                fullUrl = fullUrl.replace(/\/upload\/resize_cache\/iblock\/([^/]+)\/[^/]+\/([^/]+)$/, '/upload/iblock/$1/$2');
+            }
             if (!images.includes(fullUrl)) images.push(fullUrl);
         } catch(e) {}
     };
 
-    // From JSON-LD
+    // From gallery & zoom links
+    $('a.zoom, .zoom, .pictureSlider a, .pictureSlider img, a.picture, a[data-fancybox], [data-gallery-image], .thumbnails a, .image-additional a, .product-images a, .product-gallery a, .slider-for img, .product-photo img, .product-slider img, .product-image a, .gallery-top a, [data-zoom-image]').each((_, el) => {
+        const href = $(el).attr('href') || $(el).attr('data-href') || $(el).attr('data-src') || $(el).attr('src') || $(el).attr('data-zoom-image');
+        addImg(href);
+    });
+
     if (jsonLdData && jsonLdData.image) {
         if (Array.isArray(jsonLdData.image)) jsonLdData.image.forEach(addImg);
         else addImg(jsonLdData.image);
     }
-    // From OG
     addImg($('meta[property="og:image"]').attr('content'));
 
-    // From DOM gallery
-    $('a[data-fancybox], [data-gallery-image], .thumbnails a, .image-additional a, .product-images a, .product-gallery a, .slider-for img, .product-photo img, .product-slider img').each((_, el) => {
-        const href = $(el).attr('href') || $(el).attr('data-href') || $(el).attr('data-src') || $(el).attr('src');
-        addImg(href);
-    });
-
-    // If still empty, search all prominent images
     if (images.length === 0) {
         $('img, a').each((_, el) => {
             const src = $(el).attr('src') || $(el).attr('href') || $(el).attr('data-src');
@@ -846,37 +933,26 @@ async function scrapeSupplierProduct(targetUrl) {
         });
     }
 
-    // 6. Characteristics (Specs)
-    const specs = [];
-    $('table tr, dl, .b-product-info tr, .product-characteristics tr, .product-features tr, .table-specification tr').each((_, el) => {
-        let key = $(el).find('th, td:first-child, dt, .param-name, .name').first().text().trim();
-        let val = $(el).find('td:last-child, dd, .param-value, .val').first().text().trim();
-        if (key && val && key !== val) {
-            key = key.replace(/[:\s]+$/, '').trim();
-            val = val.trim();
-            if (key.length > 1 && key.length < 50 && val.length < 150 && !specs.some(s => s.key === key)) {
-                specs.push({ key, val });
-            }
-        }
-    });
+    // 8. Color Hint with clean UA translation
+    const colorMap = {
+        'серый': 'Сірий', 'черный': 'Чорний', 'белый': 'Білий', 'синий': 'Синій',
+        'красный': 'Червоний', 'зеленый': 'Зелений', 'желтый': 'Жовтий', 'розовый': 'Рожевий',
+        'бежевый': 'Бежевий', 'коричневый': 'Коричневий', 'голубой': 'Блакитний',
+        'фиолетовый': 'Фіолетовий', 'оранжевый': 'Помаранчевий', 'серебристый': 'Сріблястий'
+    };
 
-    // 7. Description
-    let descElem = $('#tab-description, .product-description, [itemprop="description"], .b-user-content, .product-about, #description').first();
-    let description = '';
-    if (descElem.length) {
-        descElem.find('script, style, iframe, img, a').remove();
-        description = descElem.text().replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-    }
-    // Remove supplier phones or external contacts
-    description = description.replace(/(?:\+?38)?\s?\(?0\d{2}\)?\s?\d{3}[\s-]?\d{2}[\s-]?\d{2}/g, '').trim();
-
-    // 8. Color Hint
     let colorName = '';
     const colorSpec = specs.find(s => s.key.toLowerCase().includes('колір') || s.key.toLowerCase().includes('цвет'));
-    if (colorSpec) colorName = colorSpec.val;
+    if (colorSpec) {
+        const raw = colorSpec.val.toLowerCase().trim();
+        colorName = colorMap[raw] || (raw.charAt(0).toUpperCase() + raw.slice(1));
+    }
     if (!colorName) {
-        const colorMatch = title.match(/\(([^)]*(?:чорний|білий|сірий|синій|червоний|зелений|коричневий|бежевий|жовтий|рожевий|дуб|венге|графіт|gold|black|white)[^)]*)\)/i);
-        if (colorMatch) colorName = colorMatch[1].trim();
+        const colorMatch = title.match(/\(([^)]*(?:чорний|білий|сірий|синій|червоний|зелений|коричневий|бежевий|жовтий|рожевий|дуб|венге|графіт|серый|черный|белый|синий|красный|зеленый|gold|black|white|grey|gray)[^)]*)\)/i);
+        if (colorMatch) {
+            const raw = colorMatch[1].toLowerCase().trim();
+            colorName = colorMap[raw] || (raw.charAt(0).toUpperCase() + raw.slice(1));
+        }
     }
     if (!colorName) colorName = 'Стандарт';
 
