@@ -1432,7 +1432,9 @@
                     document.getElementById('p-price').value = p.price;
                     document.getElementById('p-oldprice').value = p.oldPrice || '';
                     document.getElementById('p-badge').value = p.badgeText || '';
-                    setAvailability(p.availability);
+                    // If all colors are marked unavailable, sync main availability toggle
+                    const hasInStockColor = !p.colors || p.colors.length === 0 || p.colors.some(c => c.available !== false && c.available !== 'false');
+                    setAvailability(hasInStockColor ? p.availability : 'Немає в наявності');
                     document.getElementById('p-desc').value = p.description || '';
                     
                     colorsContainer.innerHTML = '';
@@ -1475,7 +1477,9 @@
                     document.getElementById('p-price').value = p.price;
                     document.getElementById('p-oldprice').value = p.oldPrice || '';
                     document.getElementById('p-badge').value = p.badgeText || '';
-                    setAvailability(p.availability);
+                    // If all colors are marked unavailable, sync main availability toggle
+                    const hasInStockColor = !p.colors || p.colors.length === 0 || p.colors.some(c => c.available !== false && c.available !== 'false');
+                    setAvailability(hasInStockColor ? p.availability : 'Немає в наявності');
                     document.getElementById('p-desc').value = p.description || '';
                     colorsContainer.innerHTML = '';
                     if (p.colors) p.colors.forEach(c => colorsContainer.appendChild(createColorRow(c.name, c.image, c.available, c.images || [])));
@@ -1681,6 +1685,11 @@
                         images.push(...colorImages);
                     }
                 });
+                // Auto-sync availability: if all colors are unavailable, product availability is "Немає в наявності"
+                const hasInStockColor = colors.length === 0 || colors.some(c => c.available !== false && c.available !== 'false');
+                const mainAvail = document.getElementById('p-avail').value.trim();
+                const finalAvail = (!hasInStockColor && colors.length > 0) ? 'Немає в наявності' : mainAvail;
+
                 const obj = {
                     id: document.getElementById('p-id').value.trim(),
                     title: document.getElementById('p-title').value.trim(),
@@ -1689,7 +1698,7 @@
                     price: parseInt(document.getElementById('p-price').value) || 0,
                     oldPrice: parseInt(document.getElementById('p-oldprice').value) || null,
                     badgeText: document.getElementById('p-badge').value.trim(),
-                    availability: document.getElementById('p-avail').value.trim(),
+                    availability: finalAvail,
                     sku: document.getElementById('p-sku').value.trim(),
                     groupId: document.getElementById('p-groupId').value.trim(),
                     variantColor: document.getElementById('p-variantColor').value.trim(),

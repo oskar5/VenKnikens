@@ -131,6 +131,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Helper: determine real effective product availability based on variants
+        const getProductAvailability = (prod) => {
+            if (!prod) return 'Немає в наявності';
+            if (prod.availability === 'Немає в наявності' || prod.availability === false || prod.availability === 'false') {
+                return 'Немає в наявності';
+            }
+            if (prod.colors && Array.isArray(prod.colors) && prod.colors.length > 0) {
+                const hasInStockColor = prod.colors.some(c => c.available !== false && c.available !== 'false');
+                if (!hasInStockColor) {
+                    return 'Немає в наявності';
+                }
+                return 'В наявності';
+            }
+            return prod.availability || 'В наявності';
+        };
+
         const renderProducts = (filterCat, filterSubCat) => {
             if (filterCat === 'Категорії') {
                 let html = '';
@@ -179,25 +195,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
             let html = '';
             filtered.forEach(prod => {
+                const availStatus = getProductAvailability(prod);
+                const isInStock = availStatus === 'В наявності';
+
                 let mainImg = prod.images && prod.images[0] ? prod.images[0] : '';
-                if (prod.colors && prod.colors.length > 0) mainImg = prod.colors[0].image;
+                if (prod.colors && prod.colors.length > 0) {
+                    // Pick the first in-stock color if available, otherwise first color
+                    const inStockColor = prod.colors.find(c => c.available !== false && c.available !== 'false');
+                    const targetColor = inStockColor || prod.colors[0];
+                    if (targetColor && targetColor.image) mainImg = targetColor.image;
+                }
 
                 html += `
-                    <div class="product-card" data-id="${prod.id}" data-delivery='${JSON.stringify(prod.delivery || {})}'>
+                    <div class="product-card ${isInStock ? '' : 'product-card-out-of-stock'}" data-id="${prod.id}" data-delivery='${JSON.stringify(prod.delivery || {})}'>
                         <div class="product-img-wrapper" onclick="window.location.href='product.html?id=${encodeURIComponent(prod.id)}'">
                             ${prod.badgeText ? '<span class="sale-badge">' + prod.badgeText + '</span>' : ''}
                             <img src="${mainImg}" alt="${prod.title}" class="product-img" loading="lazy">
                         </div>
                         <div class="product-info">
                             <h3 class="product-title" onclick="window.location.href='product.html?id=${encodeURIComponent(prod.id)}'">${prod.title}</h3>
-                            <span class="product-availability">${prod.availability || '&nbsp;'}</span>
+                            <span class="product-availability ${isInStock ? 'in-stock' : 'out-of-stock'}">${availStatus}</span>
                             <div class="product-pricing">
                                 <span class="current-price">${prod.price} грн.</span>
                                 ${prod.oldPrice ? '<span class="old-price">' + prod.oldPrice + ' грн.</span>' : ''}
                             </div>
                             <div class="product-actions">
-                                <a href="product.html?id=${encodeURIComponent(prod.id)}" class="btn-sm btn-primary-sm">Детальніше</a>
-                                <a href="#" class="btn-sm btn-outline-sm">Додати до замовлення</a>
+                                <a href="product.html?id=${encodeURIComponent(prod.id)}" class="btn-sm btn-primary-sm" style="${isInStock ? '' : 'width:100%;'}">Детальніше</a>
+                                ${isInStock ? '<a href="#" class="btn-sm btn-outline-sm">Додати до замовлення</a>' : ''}
                             </div>
                         </div>
                     </div>
@@ -513,50 +537,71 @@ document.addEventListener('DOMContentLoaded', () => {
             const colorHead = document.getElementById('color-select-head');
             const colorList = colorGroup ? colorGroup.querySelector('.color-options-list') : null;
             
+            // 1. Separate in-stock and out-of-stock colors (in-stock first)
+            const rawColors = product.colors || [];
+            const inStockColors = rawColors.filter(c => c.available !== false && c.available !== 'false');
+            const outOfStockColors = rawColors.filter(c => c.available === false || c.available === 'false');
+            const displayColors = [...inStockColors, ...outOfStockColors];
+
+            // 2. Select initial color: first IN-STOCK color if available, otherwise first color
+            const initialColor = inStockColors[0] || displayColors[0] || null;
+            const headImg = initialColor ? initialColor.image : (product.images ? product.images[0] : '');
+            const headName = initialColor ? initialColor.name : (product.variantColor || 'Варіант');
+            const initialAvail = initialColor
+                ? (initialColor.available !== false && initialColor.available !== 'false')
+                : (getProductAvailability(product) === 'В наявності');
+
             // Set initial state
             if (colorHead) {
-                const firstColor = product.colors && product.colors[0] ? product.colors[0] : null;
-                const headImg = firstColor ? firstColor.image : (product.images ? product.images[0] : '');
-                const headName = product.variantColor || (firstColor ? firstColor.name : 'Варіант');
-                colorHead.innerHTML = `<img src="${headImg}" alt="${headName}" class="color-thumb-sm"><span>${headName}</span>`;
-                
-                // Set initial availability
-                updateAvailabilityUI(firstColor ? (firstColor.available !== false) : true);
+                colorHead.innerHTML = `<img src="${headImg}" alt="${headName}" class="color-thumb-sm"><span>${headName}${initialAvail ? '' : ' <small style="color:#ef4444; margin-left:4px;">(немає)</small>'}</span>`;
+                updateAvailabilityUI(initialAvail);
             }
             if (mainImg) {
-                mainImg.src = product.colors && product.colors[0] ? product.colors[0].image : (product.images ? product.images[0] : '');
+                mainImg.src = headImg;
+            }
+
+            // Initial gallery: use the initial (in-stock) color's full images array
+            if (initialColor) {
+                const initImgs = (initialColor.images && initialColor.images.length > 0)
+                    ? initialColor.images
+                    : (initialColor.image ? [initialColor.image] : []);
+                if (initImgs.length > 0) {
+                    allImages = initImgs;
+                }
+            }
+            if (allImages.length === 0 && product.images) {
+                allImages = product.images;
             }
             
             let colorHtml = '';
             
-            // Add internal colors (variants within the same product)
-            if (product.colors) {
-                product.colors.forEach((c, idx) => {
-                    if (c.name) {
-                        const isAvail = c.available !== false;
-                        colorHtml += `
-                            <li class="color-option" data-color="${c.name}" data-img="${c.image}" data-avail="${isAvail}">
-                                <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
-                                <span>${c.name} ${isAvail ? '' : '<small style="color:#ef4444; margin-left:5px;">(немає)</small>'}</span>
-                            </li>
-                        `;
-                    }
-                    // Initial gallery: use first color's full images array
-                    if (idx === 0) {
-                        const imgs = (c.images && c.images.length > 0) ? c.images : (c.image ? [c.image] : []);
-                        allImages = imgs;
-                    }
-                });
-            }
+            // Add internal colors (in-stock colors displayed first)
+            displayColors.forEach((c) => {
+                if (c.name) {
+                    const isAvail = c.available !== false && c.available !== 'false';
+                    const isSelected = initialColor && c.name === initialColor.name;
+                    colorHtml += `
+                        <li class="color-option ${isSelected ? 'selected' : ''}" data-color="${c.name}" data-img="${c.image}" data-avail="${isAvail}">
+                            <img src="${c.image}" alt="${c.name}" class="color-thumb-sm">
+                            <span>${c.name} ${isAvail ? '' : '<small style="color:#ef4444; margin-left:5px;">(немає)</small>'}</span>
+                        </li>
+                    `;
+                }
+            });
 
-            // Add external variants (linked products via groupId)
-            variants.forEach(v => {
+            // Add external variants (linked products via groupId), in-stock first
+            const inStockVariants = variants.filter(v => getProductAvailability(v) === 'В наявності');
+            const outOfStockVariants = variants.filter(v => getProductAvailability(v) !== 'В наявності');
+            const sortedVariants = [...inStockVariants, ...outOfStockVariants];
+
+            sortedVariants.forEach(v => {
                 const vImg = v.colors && v.colors[0] ? v.colors[0].image : (v.images ? v.images[0] : '');
                 const vName = v.variantColor || (v.colors && v.colors[0] ? v.colors[0].name : 'Інший колір');
+                const isVAvail = getProductAvailability(v) === 'В наявності';
                 colorHtml += `
                     <li class="color-option variant-redirect" data-url="product.html?id=${encodeURIComponent(v.id)}">
                         <img src="${vImg}" alt="${vName}" class="color-thumb-sm">
-                        <span>${vName}</span>
+                        <span>${vName} ${isVAvail ? '' : '<small style="color:#ef4444; margin-left:5px;">(немає)</small>'}</span>
                     </li>
                 `;
             });
@@ -872,10 +917,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Update dropdown header text/icon
                 const head = document.getElementById('color-select-head');
                 if (head) {
-                    head.querySelector('span').textContent = newColor;
-                    head.querySelector('img').src = newImg;
+                    const spanEl = head.querySelector('span');
+                    if (spanEl) {
+                        spanEl.innerHTML = `${newColor}${isAvail ? '' : ' <small style="color:#ef4444; margin-left:4px;">(немає)</small>'}`;
+                    }
+                    const imgEl = head.querySelector('img');
+                    if (imgEl && newImg) imgEl.src = newImg;
                     head.classList.remove('active');
                 }
+                document.querySelectorAll('.color-option').forEach(opt => {
+                    opt.classList.toggle('selected', opt.getAttribute('data-color') === newColor);
+                });
                 
                 // Rebuild gallery for selected color (per-color images)
                 if (typeof window.switchColorGallery === 'function') {

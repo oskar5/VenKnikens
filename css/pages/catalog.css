@@ -117,6 +117,18 @@
     font-weight: 400;
 }
 
+.product-availability.in-stock {
+    color: #10b981;
+}
+
+.product-availability.out-of-stock {
+    color: #ef4444;
+}
+
+.product-card-out-of-stock .product-img {
+    opacity: 0.88;
+}
+
 .product-pricing {
     display: flex;
     align-items: baseline;
