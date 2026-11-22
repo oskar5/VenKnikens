@@ -193,6 +193,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Sort: in-stock products first, out-of-stock last
+            filtered = [...filtered].sort((a, b) => {
+                const aInStock = getProductAvailability(a) === 'В наявності';
+                const bInStock = getProductAvailability(b) === 'В наявності';
+                if (aInStock === bInStock) return 0;
+                return aInStock ? -1 : 1;
+            });
+
             let html = '';
             filtered.forEach(prod => {
                 const availStatus = getProductAvailability(prod);
