@@ -3,6 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const cheerio = require('cheerio');
 const supabase = require('../supabaseClient');
 
 const app = express();
@@ -726,6 +727,189 @@ app.delete('/api/products/:id', requireAdmin, async (req, res) => {
     } catch (e) {
         console.error(e);
         res.status(500).json({ success: false, error: e.message });
+    }
+});
+
+// ==============================
+// Supplier Scraper Helper
+// ==============================
+async function scrapeSupplierProduct(targetUrl) {
+    let cookieHeader = '';
+    if (targetUrl.includes('drop-primaveo.com.ua')) {
+        cookieHeader = 'challenge_passed=4acff00e4189f591868bfc926eeb5d57bdb721337b52e9db265e30da1e42d8a0';
+    }
+
+    const res = await fetch(targetUrl, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+            'Accept-Language': 'uk,ru;q=0.9,en;q=0.8',
+            'Cookie': cookieHeader
+        },
+        redirect: 'follow'
+    });
+
+    if (!res.ok) {
+        throw new Error(`Сайт постачальника відповів статусом ${res.status} ${res.statusText}`);
+    }
+
+    let html = await res.text();
+    // Handle Drop-Primaveo dynamic challenge hash if present
+    if (html.includes('challenge_passed=') && html.length < 1500) {
+        const hashMatch = html.match(/defaultHash\s*=\s*"([^"]+)"/);
+        if (hashMatch) {
+            const reRes = await fetch(targetUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Cookie': `challenge_passed=${hashMatch[1]}`
+                }
+            });
+            html = await reRes.text();
+        }
+    }
+
+    const $ = cheerio.load(html);
+
+    // 1. JSON-LD
+    let jsonLdData = null;
+    $('script[type="application/ld+json"]').each((_, el) => {
+        try {
+            const parsed = JSON.parse($(el).html());
+            if (parsed['@type'] === 'Product' || (Array.isArray(parsed['@graph']) && parsed['@graph'].some(x => x['@type'] === 'Product'))) {
+                jsonLdData = parsed['@type'] === 'Product' ? parsed : parsed['@graph'].find(x => x['@type'] === 'Product');
+            }
+        } catch(e) {}
+    });
+
+    // 2. Title
+    let title = (jsonLdData && jsonLdData.name) || $('meta[property="og:title"]').attr('content') || $('h1').first().text();
+    title = (title || '').replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+    title = title.replace(/\s*[-–|]\s*(?:купити|купить|інтернет-магазин|интернет-магазин|ціна|цена|відгуки|отзывы|оптом).*$/i, '').trim();
+
+    // 3. SKU
+    let sku = (jsonLdData && jsonLdData.sku) || $('[itemprop="sku"]').text() || $('[itemprop="sku"]').attr('content') || '';
+    if (!sku) {
+        const bodyText = $('body').text();
+        const skuM = bodyText.match(/(?:Артикул|Код товара|Код товару|Арт\.|Код|SKU)[:\s#]*([a-zA-Z0-9_\-\.\/]+)/i);
+        if (skuM && skuM[1] && skuM[1].length < 30) sku = skuM[1].trim();
+    }
+    sku = (sku || '').trim();
+
+    // 4. Price
+    let price = 0;
+    if (jsonLdData && jsonLdData.offers) {
+        const off = Array.isArray(jsonLdData.offers) ? jsonLdData.offers[0] : jsonLdData.offers;
+        if (off && off.price) price = parseInt(off.price) || 0;
+    }
+    if (!price) {
+        const pStr = $('[itemprop="price"]').attr('content') || $('[itemprop="price"]').text() || $('.product-price, .price, .current-price, .product__price').first().text();
+        const cleanP = (pStr || '').replace(/[^\d]/g, '');
+        if (cleanP) price = parseInt(cleanP) || 0;
+    }
+
+    // 5. Images
+    const images = [];
+    const addImg = (u) => {
+        if (!u || typeof u !== 'string') return;
+        try {
+            let fullUrl = new URL(u.trim(), targetUrl).href;
+            if (!fullUrl.match(/\.(jpg|jpeg|png|webp)(\?|$)/i) && !fullUrl.includes('images') && !fullUrl.includes('products')) return;
+            if (fullUrl.includes('logo') || fullUrl.includes('icon') || fullUrl.includes('banner') || fullUrl.includes('cart') || fullUrl.includes('avatar')) return;
+            // Upgrade resolution for known platforms
+            fullUrl = fullUrl.replace(/\/\d+x\d+[^/]*\//, '/1024x1024l80mc0/');
+            fullUrl = fullUrl.replace(/_w\d+_h\d+_/, '_w1024_h1024_');
+            if (!images.includes(fullUrl)) images.push(fullUrl);
+        } catch(e) {}
+    };
+
+    // From JSON-LD
+    if (jsonLdData && jsonLdData.image) {
+        if (Array.isArray(jsonLdData.image)) jsonLdData.image.forEach(addImg);
+        else addImg(jsonLdData.image);
+    }
+    // From OG
+    addImg($('meta[property="og:image"]').attr('content'));
+
+    // From DOM gallery
+    $('a[data-fancybox], [data-gallery-image], .thumbnails a, .image-additional a, .product-images a, .product-gallery a, .slider-for img, .product-photo img, .product-slider img').each((_, el) => {
+        const href = $(el).attr('href') || $(el).attr('data-href') || $(el).attr('data-src') || $(el).attr('src');
+        addImg(href);
+    });
+
+    // If still empty, search all prominent images
+    if (images.length === 0) {
+        $('img, a').each((_, el) => {
+            const src = $(el).attr('src') || $(el).attr('href') || $(el).attr('data-src');
+            if (src && (src.includes('content/images') || src.includes('product') || src.includes('catalog') || src.includes('upload'))) {
+                addImg(src);
+            }
+        });
+    }
+
+    // 6. Characteristics (Specs)
+    const specs = [];
+    $('table tr, dl, .b-product-info tr, .product-characteristics tr, .product-features tr, .table-specification tr').each((_, el) => {
+        let key = $(el).find('th, td:first-child, dt, .param-name, .name').first().text().trim();
+        let val = $(el).find('td:last-child, dd, .param-value, .val').first().text().trim();
+        if (key && val && key !== val) {
+            key = key.replace(/[:\s]+$/, '').trim();
+            val = val.trim();
+            if (key.length > 1 && key.length < 50 && val.length < 150 && !specs.some(s => s.key === key)) {
+                specs.push({ key, val });
+            }
+        }
+    });
+
+    // 7. Description
+    let descElem = $('#tab-description, .product-description, [itemprop="description"], .b-user-content, .product-about, #description').first();
+    let description = '';
+    if (descElem.length) {
+        descElem.find('script, style, iframe, img, a').remove();
+        description = descElem.text().replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+    }
+    // Remove supplier phones or external contacts
+    description = description.replace(/(?:\+?38)?\s?\(?0\d{2}\)?\s?\d{3}[\s-]?\d{2}[\s-]?\d{2}/g, '').trim();
+
+    // 8. Color Hint
+    let colorName = '';
+    const colorSpec = specs.find(s => s.key.toLowerCase().includes('колір') || s.key.toLowerCase().includes('цвет'));
+    if (colorSpec) colorName = colorSpec.val;
+    if (!colorName) {
+        const colorMatch = title.match(/\(([^)]*(?:чорний|білий|сірий|синій|червоний|зелений|коричневий|бежевий|жовтий|рожевий|дуб|венге|графіт|gold|black|white)[^)]*)\)/i);
+        if (colorMatch) colorName = colorMatch[1].trim();
+    }
+    if (!colorName) colorName = 'Стандарт';
+
+    return {
+        title,
+        sku,
+        price,
+        description,
+        specs,
+        colorName,
+        mainImage: images[0] || '',
+        images
+    };
+}
+
+// ==============================
+// API: Parse supplier product from URL
+// ==============================
+app.post('/api/parse-supplier-url', requireAdmin, async (req, res) => {
+    const { url } = req.body || {};
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+        return res.status(400).json({ success: false, error: 'Вкажіть коректне посилання (URL)' });
+    }
+
+    try {
+        const data = await scrapeSupplierProduct(url.trim());
+        if (!data.title && data.images.length === 0) {
+            return res.status(422).json({ success: false, error: 'Не вдалося витягти дані товару з цієї сторінки' });
+        }
+        res.json({ success: true, data });
+    } catch (err) {
+        console.error('Scrape supplier error:', err);
+        res.status(500).json({ success: false, error: 'Помилка завантаження: ' + err.message });
     }
 });
 
